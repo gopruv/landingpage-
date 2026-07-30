@@ -15,7 +15,7 @@ const steps = [
   {
     num: "02",
     title: "Live Socratic Review",
-    body: "45 minutes on camera with a senior engineer who has read every line of your submission. Questions are generated specifically for your work. There is no question bank and no way to coach for it.",
+    body: "40 minutes on camera with a senior engineer who has read every line of your submission. Questions are generated specifically for your work. There is no question bank and no way to coach for it.",
   },
   {
     num: "03",
@@ -28,7 +28,7 @@ const dimensions = [
   { label: "Technical Depth",  score: 91 },
   { label: "Communication",    score: 84 },
   { label: "Reproducibility",  score: 88 },
-  { label: "Originality",      score: 79 },
+  { label: "Problem solving",  score: 79 },
 ];
 
 /* ── Credential preview card ── */

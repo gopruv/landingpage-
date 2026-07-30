@@ -89,7 +89,7 @@ export default function Navbar() {
             ) : (
               <Link
                 key={link.href}
-                href={`/${link.href}`}
+                href={{ pathname: "/", hash: link.href.replace("#", "") }}
                 className="transition-colors duration-200"
                 style={{ fontFamily: "Inter, system-ui, sans-serif", fontWeight: 500, fontSize: "14px", letterSpacing: "-0.01em", color: "#4a4440" }}
                 onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = "#0f0d0c")}
@@ -119,7 +119,7 @@ export default function Navbar() {
 
           {/* Apply Now — inside nav group */}
           <Link
-            href="/get-verified"
+            href="/join-waitlist"
             className="font-label-sm uppercase tracking-[0.15em] text-[11px] px-5 py-2.5"
             style={{
               backgroundColor: "#eb4511",

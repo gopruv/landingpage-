@@ -13,7 +13,7 @@ const panels = [
   },
   {
     num: "02", eyebrow: "The Session",
-    headline: "45 minutes. One engineer. Your work.",
+    headline: "40 minutes. One engineer. Your work.",
     body: "Not a quiz. Not a take-home test. A real conversation about the project you built, every decision you made, every tradeoff you chose. The ones who built it for real talk about it differently.",
   },
   {
@@ -71,7 +71,7 @@ function ClockVisual() {
         })}
       </svg>
       <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ fontSize: 64, fontWeight: 700, letterSpacing: "-0.05em", lineHeight: 1, color: "rgba(255,255,255,0.96)" }}>45</div>
+        <div style={{ fontSize: 64, fontWeight: 700, letterSpacing: "-0.05em", lineHeight: 1, color: "rgba(255,255,255,0.96)" }}>40</div>
         <div style={{ fontSize: 10, fontWeight: 500, letterSpacing: "0.3em", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", marginTop: 6 }}>minutes</div>
       </div>
     </div>
@@ -84,7 +84,7 @@ function ScoreVisual() {
     { label: "Technical Depth", w: "91%" },
     { label: "Communication",   w: "84%" },
     { label: "Reproducibility", w: "88%" },
-    { label: "Originality",     w: "79%" },
+    { label: "Problem solving", w: "79%" },
   ];
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16, width: 260 }}>

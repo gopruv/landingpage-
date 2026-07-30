@@ -3,7 +3,6 @@
 import Link from "next/link";
 
 const primaryLinks = [
-  { label: "About Us",          href: "/about-us"   },
   { label: "Contact Us",        href: "/contact"           },
   { label: "Become a Reviewer", href: "/become-a-reviewer" },
 ];

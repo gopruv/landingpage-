@@ -64,13 +64,13 @@ export interface Score {
   technical_depth: number;
   communication: number;
   reproducibility: number;
-  originality: number;
+  problem_solving: number;
   total_score: number;
   passed: boolean;
   feedback_td: string;
   feedback_comm: string;
   feedback_repro: string;
-  feedback_orig: string;
+  feedback_ps: string;
   internal_notes?: string;
   submitted_at: string;
   is_borderline: boolean;

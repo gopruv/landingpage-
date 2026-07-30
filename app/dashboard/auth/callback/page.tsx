@@ -27,12 +27,13 @@ function CallbackHandler() {
         return;
       }
 
+      // Full navigation so auth cookie is visible to middleware on the next request
       const map: Record<string, string> = {
         student:  '/dashboard/student',
         reviewer: '/dashboard/reviewer',
         admin:    '/dashboard/admin',
       };
-      router.push(map[account_type ?? ''] || '/dashboard');
+      window.location.href = map[account_type ?? ''] || '/dashboard';
     };
 
     handleCallback();

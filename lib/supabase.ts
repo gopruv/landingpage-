@@ -1,5 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 
+function cookieDomain(): string {
+  if (typeof window === 'undefined') return '';
+  const host = window.location.hostname;
+  if (host === 'localhost' || host === '127.0.0.1') return '';
+  return '.orcred.com';
+}
+
 // Cookie-based storage so the session is shared across orcred.com and dashboard.orcred.com
 const cookieStorage = {
   getItem: (key: string): string | null => {
@@ -12,11 +19,15 @@ const cookieStorage = {
   setItem: (key: string, value: string): void => {
     if (typeof document === 'undefined') return;
     const maxAge = 60 * 60 * 24 * 365; // 1 year
-    document.cookie = `${key}=${encodeURIComponent(value)}; domain=.orcred.com; path=/; max-age=${maxAge}; SameSite=Lax`;
+    const domain = cookieDomain();
+    const domainPart = domain ? `; domain=${domain}` : '';
+    document.cookie = `${key}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; SameSite=Lax${domainPart}`;
   },
   removeItem: (key: string): void => {
     if (typeof document === 'undefined') return;
-    document.cookie = `${key}=; domain=.orcred.com; path=/; max-age=0`;
+    const domain = cookieDomain();
+    const domainPart = domain ? `; domain=${domain}` : '';
+    document.cookie = `${key}=; path=/; max-age=0${domainPart}`;
   },
 };
 

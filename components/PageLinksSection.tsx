@@ -7,32 +7,6 @@ const ease = [0.22, 1, 0.36, 1] as const;
 
 /* ── Original SVG motifs — one per card ── */
 
-// About Us: Orcred mark (orange circle) + two horizontal rule lines
-function AboutVisual() {
-  return (
-    <svg width="100%" height="100%" viewBox="0 0 320 180" fill="none" preserveAspectRatio="xMidYMid meet">
-      {/* Circle mark */}
-      <circle cx="160" cy="82" r="28" fill="#eb4511" />
-      {/* Top rule */}
-      <line x1="40" y1="82" x2="120" y2="82" stroke="rgba(235,69,17,0.3)" strokeWidth="1" />
-      {/* Bottom rule */}
-      <line x1="200" y1="82" x2="280" y2="82" stroke="rgba(235,69,17,0.3)" strokeWidth="1" />
-      {/* Wordmark below */}
-      <text
-        x="160" y="132"
-        textAnchor="middle"
-        fill="rgba(255,255,255,0.35)"
-        fontFamily="Inter, system-ui, sans-serif"
-        fontWeight="700"
-        fontSize="13"
-        letterSpacing="0.22em"
-      >
-        ORCRED
-      </text>
-    </svg>
-  );
-}
-
 // Contact Us: simple speech bubble outline
 function ContactVisual() {
   return (
@@ -69,13 +43,6 @@ function ReviewerVisual() {
 }
 
 const cards = [
-  {
-    href:    "/who-we-are",
-    title:   "About Us",
-    desc:    "Two founders, a clear problem, and a standard that doesn't bend. Learn what Orcred is and why we built it.",
-    cta:     "Learn more",
-    Visual:  AboutVisual,
-  },
   {
     href:    "/contact",
     title:   "Contact Us",

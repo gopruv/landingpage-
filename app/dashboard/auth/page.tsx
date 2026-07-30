@@ -4,6 +4,7 @@ import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 
 const DASHBOARD_MAP: Record<string, string> = {
   student: '/dashboard/student',
@@ -20,15 +21,30 @@ function AuthContent() {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
+    const err = searchParams.get('error');
+    if (err) {
+      const messages: Record<string, string> = {
+        no_token:       'Login link was incomplete. Request a new one.',
+        invalid_link:   'That login link is invalid or expired. Request a new one.',
+        missing_tokens: 'Login could not be completed. Request a new link.',
+        session_error:  'Could not save your session. Try again.',
+        admin_required: 'Could not verify admin access. In Supabase Studio → users, set account_type to admin on the row whose id matches Authentication → Users (same UUID). Then sign in again.',
+        reviewer_required: 'Reviewer access only. Sign in with a reviewer account.',
+      };
+      setError(messages[err] ?? 'Login failed. Please try again.');
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) return;
-      const { data: profile } = await supabase
-        .from('users')
-        .select('account_type')
-        .eq('id', session.user.id)
-        .single();
-      const dest = DASHBOARD_MAP[profile?.account_type ?? ''];
-      if (dest) router.replace(dest);
+      try {
+        const profile = await api.auth.me() as { account_type?: string };
+        const dest = DASHBOARD_MAP[profile.account_type ?? ''];
+        if (dest) router.replace(dest);
+      } catch {
+        /* stay on auth page */
+      }
     });
   }, [router]);
 
@@ -74,8 +90,18 @@ function AuthContent() {
           body: JSON.stringify({ email }),
         }
       );
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'An error occurred. Please try again.');
+      const raw = await res.text();
+      let data: { error?: string; success?: boolean } | null = null;
+      try {
+        data = raw ? JSON.parse(raw) : null;
+      } catch {
+        data = null;
+      }
+      if (!res.ok) {
+        throw new Error(
+          data?.error || (raw ? raw.slice(0, 200) : `Server error (${res.status}). Is the backend running on port 3001?`)
+        );
+      }
       setSuccess(true);
       setEmail('');
     } catch (err: any) {
