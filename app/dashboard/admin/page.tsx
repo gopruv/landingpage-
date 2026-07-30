@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { api } from '@/lib/api';
-import { useRequireAuth } from '@/lib/useRequireAuth';
+import { useSignOut } from '@/lib/useRequireRole';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -72,7 +72,7 @@ const BORDER = '1px solid rgba(15,13,12,0.1)';
 type View = 'dashboard' | 'applications' | 'reviewers' | 'settings';
 
 export default function AdminDashboard() {
-  const { ready, signOut } = useRequireAuth();
+  const signOut = useSignOut();
   const [view, setView] = useState<View>('dashboard');
   const [analytics,    setAnalytics]    = useState<Analytics | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
@@ -130,8 +130,6 @@ export default function AdminDashboard() {
   // Derived counts from loaded applications (all pages would need backend; use analytics for top cards)
   const awaiting  = applications.filter(a => a.status === 'awaiting_reviewer').length;
   const scheduled = applications.filter(a => a.status === 'scheduled').length;
-
-  if (!ready) return null;
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: BG, fontFamily: FONT }}>

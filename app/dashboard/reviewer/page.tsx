@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useRequireAuth } from '@/lib/useRequireAuth';
+import { useSignOut } from '@/lib/useRequireRole';
 
 interface Submission {
   id: string;
@@ -44,7 +44,7 @@ const MOCK_SUBMISSIONS: Submission[] = [
 
 export default function ReviewerDashboard() {
   const router = useRouter();
-  const { ready, signOut } = useRequireAuth();
+  const signOut = useSignOut();
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [scoringView, setScoringView] = useState(false);
   const [scores, setScores] = useState({
@@ -423,8 +423,6 @@ export default function ReviewerDashboard() {
       </div>
     );
   }
-
-  if (!ready) return null;
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-page)' }}>

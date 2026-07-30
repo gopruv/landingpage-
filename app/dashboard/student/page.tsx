@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { api, ApiError } from '@/lib/api';
-import { useRequireAuth } from '@/lib/useRequireAuth';
+import { useSignOut } from '@/lib/useRequireRole';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -50,7 +50,7 @@ const STATE_META: Record<State, { label: string; color: string; bg: string; step
 
 export default function StudentDashboard() {
   const router = useRouter();
-  const { ready, signOut } = useRequireAuth();
+  const signOut = useSignOut();
   const [data,    setData]    = useState<DashData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState('');
@@ -95,8 +95,6 @@ export default function StudentDashboard() {
       }
     })();
   }, [router]);
-
-  if (!ready) return null;
 
   if (loading) return (
     <div style={{ minHeight: '100vh', backgroundColor: BG, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT }}>
