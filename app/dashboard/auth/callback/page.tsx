@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
+import { clearInvalidAuthSession } from '@/lib/authSession';
 import { supabase } from '@/lib/supabase';
 
 function CallbackHandler() {
@@ -22,7 +23,7 @@ function CallbackHandler() {
 
       const { error } = await supabase.auth.setSession({ access_token, refresh_token });
       if (error) {
-        console.error('[callback] setSession error:', error.message);
+        await clearInvalidAuthSession();
         router.push('/dashboard/auth?error=session_error');
         return;
       }

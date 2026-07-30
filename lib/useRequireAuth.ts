@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { getSafeSession } from './authSession';
 import { supabase } from './supabase';
 
 export function useRequireAuth() {
@@ -9,7 +10,7 @@ export function useRequireAuth() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    getSafeSession({ refresh: true }).then((session) => {
       if (!session) {
         router.replace('/dashboard/auth');
       } else {

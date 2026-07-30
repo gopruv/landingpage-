@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
+import AuthSessionBootstrap from "@/components/AuthSessionBootstrap";
 import CookieBanner from "@/components/CookieBanner";
 
 export const metadata: Metadata = {
@@ -50,6 +51,7 @@ export default function RootLayout({
         />
       </head>
       <body className="selection:bg-accent-orange selection:text-white">
+        <AuthSessionBootstrap />
         {children}
         <Analytics />
         <CookieBanner />

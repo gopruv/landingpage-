@@ -3,6 +3,7 @@
 import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { getSafeSession } from '@/lib/authSession';
 import { supabase } from '@/lib/supabase';
 
 const DASHBOARD_MAP: Record<string, string> = {
@@ -20,7 +21,7 @@ function AuthContent() {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    getSafeSession({ refresh: true }).then(async (session) => {
       if (!session) return;
       const { data: profile } = await supabase
         .from('users')
