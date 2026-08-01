@@ -4,6 +4,7 @@ import { Suspense, useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { isAdminOnlyAuth } from '@/lib/platformGates';
+import { api } from '@/lib/api';
 
 function AuthContent() {
   const searchParams = useSearchParams();
@@ -65,27 +66,7 @@ function AuthContent() {
     const trimmed = email.trim();
 
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/v1/auth/magic-link`,
-        {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: trimmed }),
-        }
-      );
-      const raw = await res.text();
-      let data: { error?: string; success?: boolean } | null = null;
-      try {
-        data = raw ? JSON.parse(raw) : null;
-      } catch {
-        data = null;
-      }
-      if (!res.ok) {
-        throw new Error(
-          data?.error || (raw ? raw.slice(0, 200) : `Server error (${res.status}). Is the backend running on port 3001?`)
-        );
-      }
+      await api.auth.magicLink(trimmed);
       setSentToEmail(trimmed);
       setSuccess(true);
     } catch (err: unknown) {

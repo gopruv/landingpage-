@@ -1,4 +1,5 @@
 import { getSafeSession } from './authSession';
+import { vercelProtectionBypassHeaders } from './vercelProtectionBypass';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -29,6 +30,7 @@ async function request<T>(
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
+      ...vercelProtectionBypassHeaders(),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
