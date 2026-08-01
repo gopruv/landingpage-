@@ -7,6 +7,8 @@ import { useRequireAuth } from '@/lib/useRequireAuth';
 import { supabase } from '@/lib/supabase';
 import { validateGithubUrl, validateLinkedinUrl, validateLoomUrl, normalizeUrl } from '@/lib/validators';
 import { AVAILABILITY_OPTIONS, TECH_STACK_TAGS, TIMEZONES } from '@/lib/form-constants';
+import SignupDisabledNotice from '@/components/SignupDisabledNotice';
+import { isStudentApplyEnabled } from '@/lib/platformGates';
 
 interface ApplicationFormData {
   // Step 1
@@ -301,6 +303,16 @@ export default function ApplicationPage() {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--bg-page)' }}>
         <p style={{ color: 'var(--fg-muted)', fontSize: '14px' }}>Loading…</p>
+      </div>
+    );
+  }
+
+  if (!isStudentApplyEnabled()) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6" style={{ backgroundColor: 'var(--bg-page)' }}>
+        <div className="w-full max-w-md">
+          <SignupDisabledNotice />
+        </div>
       </div>
     );
   }

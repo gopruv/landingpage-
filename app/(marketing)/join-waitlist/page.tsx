@@ -742,11 +742,7 @@ export default function JoinWaitlistPage() {
               >
                 Privacy Policy
               </a>
-              . Already have an account?{" "}
-              <a href="/dashboard/auth" style={{ color: "rgba(15,13,12,0.45)" }}>
-                Sign in
-              </a>{" "}
-              for internal testing.
+              .
             </div>
           </div>
         </div>

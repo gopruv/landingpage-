@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { isStudentApplyEnabled, WAITLIST_PATH } from '@/lib/platformGates';
 
 interface GeneratedIdea {
   id: string;
@@ -551,7 +552,7 @@ export default function ProjectGeneratorPage() {
                 </h3>
                 <div className="flex gap-4">
                   <button
-                    onClick={() => router.push('/dashboard/student')}
+                    onClick={() => router.push(isStudentApplyEnabled() ? '/dashboard/student' : WAITLIST_PATH)}
                     style={{
                       backgroundColor: 'var(--orange)',
                       color: '#ffffff',
@@ -568,7 +569,7 @@ export default function ProjectGeneratorPage() {
                     onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.8')}
                     onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
                   >
-                    Apply Now
+                    {isStudentApplyEnabled() ? 'Apply Now' : 'Join waitlist'}
                   </button>
                   <button
                     onClick={handleGenerateNew}

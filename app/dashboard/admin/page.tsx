@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { api, ApiError } from '@/lib/api';
 import { useRequireAuth } from '@/lib/useRequireAuth';
 import UserProfilePanel from '@/components/admin/UserProfilePanel';
@@ -442,7 +443,21 @@ export default function AdminDashboard() {
   if (!ready) return null;
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: BG, fontFamily: FONT }}>
+    <div style={{ minHeight: '100vh', backgroundColor: BG, fontFamily: FONT, overflowX: 'hidden', width: '100%', maxWidth: '100vw' }}>
+      <style>{`
+        .admin-main { max-width: 1400px; margin: 0 auto; padding: 36px clamp(16px, 4vw, 40px) 80px; width: 100%; box-sizing: border-box; }
+        .admin-header-inner { max-width: 1400px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 40px); height: 58px; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 0; }
+        .admin-stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 24px; }
+        .admin-dash-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 320px); gap: 16px; align-items: start; width: 100%; min-width: 0; }
+        .admin-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+        @media (max-width: 1080px) {
+          .admin-dash-grid { grid-template-columns: 1fr; }
+          .admin-sidebar { max-width: none !important; }
+        }
+        @media (max-width: 720px) {
+          .admin-nav-preview { display: none !important; }
+        }
+      `}</style>
 
       {/* ── Navbar ─────────────────────────────────────────────────── */}
       <header style={{
@@ -451,7 +466,7 @@ export default function AdminDashboard() {
         backdropFilter: 'blur(14px)',
         borderBottom: BORDER,
       }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 40px', height: '58px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div className="admin-header-inner">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <svg width="26" height="26" viewBox="0 0 42 42" fill="none">
               <circle cx="21" cy="21" r="20" fill="#eb4511" />
@@ -487,7 +502,19 @@ export default function AdminDashboard() {
               );
             })}
           </nav>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div className="admin-nav-preview" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Link
+              href="/dashboard/student"
+              style={{ padding: '6px 12px', fontSize: '11px', fontWeight: 600, color: 'rgba(15,13,12,0.55)', textDecoration: 'none', border: '1px solid rgba(15,13,12,0.12)', borderRadius: '6px' }}
+            >
+              Student view
+            </Link>
+            <Link
+              href="/dashboard/reviewer"
+              style={{ padding: '6px 12px', fontSize: '11px', fontWeight: 600, color: 'rgba(15,13,12,0.55)', textDecoration: 'none', border: '1px solid rgba(15,13,12,0.12)', borderRadius: '6px' }}
+            >
+              Reviewer view
+            </Link>
             <div style={{ width: '30px', height: '30px', borderRadius: '50%', backgroundColor: '#eb4511', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <span style={{ fontSize: '12px', fontWeight: 700, color: '#fff' }}>A</span>
             </div>
@@ -505,7 +532,7 @@ export default function AdminDashboard() {
         </div>
       </header>
 
-      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '36px 40px 80px' }}>
+      <div className="admin-main">
 
         {/* Page title */}
         <h1 style={{ fontSize: '28px', fontWeight: 400, letterSpacing: '-0.03em', color: '#0f0d0c', margin: '0 0 28px' }}>
@@ -549,7 +576,7 @@ export default function AdminDashboard() {
         {(view === 'dashboard' || view === 'applications') && <>
 
         {/* ── 4 Stat cards ─────────────────────────────────────────── */}
-        {view === 'dashboard' && <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px', marginBottom: '24px' }}>
+        {view === 'dashboard' && <div className="admin-stat-row">
           {loadingA ? (
             Array.from({ length: 5 }).map((_, i) => (
               <div key={i} style={{ height: '110px', backgroundColor: 'rgba(15,13,12,0.04)', border: BORDER }} />
@@ -597,10 +624,10 @@ export default function AdminDashboard() {
         </div>}
 
         {/* ── Two-column layout ─────────────────────────────────────── */}
-        <div style={{ display: 'grid', gridTemplateColumns: view === 'dashboard' ? '1fr 340px' : '1fr', gap: '16px', alignItems: 'start' }}>
+        <div className="admin-dash-grid" style={{ gridTemplateColumns: view === 'dashboard' ? undefined : 'minmax(0, 1fr)' }}>
 
           {/* ── LEFT: Applications table ─────────────────────────── */}
-          <div style={{ backgroundColor: '#fff', border: BORDER, overflow: 'visible' }}>
+          <div style={{ backgroundColor: '#fff', border: BORDER, minWidth: 0 }}>
 
             {/* Table header */}
             <div style={{ padding: '18px 20px 0', borderBottom: BORDER }}>
@@ -643,9 +670,9 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* Table — page scrolls naturally; 10 rows per page */}
-            <div>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            {/* Table — horizontal scroll on narrow viewports */}
+            <div className="admin-table-wrap">
+              <table style={{ width: '100%', minWidth: '760px', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid rgba(15,13,12,0.07)' }}>
                     {['Student', 'Project', 'Submitted', 'Payment', 'Reviewer', 'Score', 'Status', 'Actions'].map(h => (
@@ -713,16 +740,16 @@ export default function AdminDashboard() {
           </div>
 
           {/* ── RIGHT sidebar (dashboard only) ──────────────────── */}
-          {view === 'dashboard' && <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          {view === 'dashboard' && <div className="admin-sidebar" style={{ display: 'flex', flexDirection: 'column', gap: '14px', minWidth: 0, maxWidth: '320px' }}>
 
             {/* Revenue card */}
             {analytics && (
-              <div style={{ backgroundColor: '#fff', border: BORDER, padding: '22px' }}>
+              <div style={{ backgroundColor: '#fff', border: BORDER, padding: '22px', minWidth: 0, overflow: 'hidden' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                   <span style={{ fontSize: '14px', fontWeight: 600, color: '#0f0d0c', letterSpacing: '-0.01em' }}>Revenue</span>
                   <span style={{ fontSize: '11px', color: 'rgba(15,13,12,0.38)' }}>All time</span>
                 </div>
-                <div style={{ fontSize: '40px', fontWeight: 200, letterSpacing: '-0.04em', color: '#0f0d0c', lineHeight: 1, marginBottom: '6px' }}>
+                <div style={{ fontSize: 'clamp(28px, 5vw, 40px)', fontWeight: 200, letterSpacing: '-0.04em', color: '#0f0d0c', lineHeight: 1, marginBottom: '6px', wordBreak: 'break-word' }}>
                   {fmtRevenue(analytics.revenue.all_time)}
                 </div>
                 <div style={{ fontSize: '12px', color: 'rgba(15,13,12,0.45)' }}>

@@ -3,6 +3,8 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { dashboardPathForRole } from '@/lib/roles';
+import { isAdminOnlyAuth } from '@/lib/platformGates';
 
 export default function DashboardHome() {
   const router = useRouter();
@@ -13,14 +15,13 @@ export default function DashboardHome() {
         const data = await api.auth.me() as { account_type: string };
         const { account_type } = data;
 
-        if (account_type === 'student') {
-          router.push('/dashboard/student');
-        } else if (account_type === 'reviewer') {
-          router.push('/dashboard/reviewer');
-        } else if (account_type === 'admin') {
-          router.push('/dashboard/admin');
+        if (isAdminOnlyAuth() && account_type !== 'admin') {
+          router.push('/dashboard/auth?error=admin_only');
+          return;
         }
-      } catch (error) {
+
+        router.push(dashboardPathForRole(account_type));
+      } catch {
         router.push('/dashboard/auth');
       }
     };

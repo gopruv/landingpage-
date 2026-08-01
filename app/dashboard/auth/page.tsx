@@ -1,21 +1,14 @@
 'use client';
 
 import { Suspense, useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
-import { api } from '@/lib/api';
-
-const DASHBOARD_MAP: Record<string, string> = {
-  student: '/dashboard/student',
-  reviewer: '/dashboard/reviewer',
-  admin: '/dashboard/admin',
-};
+import { isAdminOnlyAuth } from '@/lib/platformGates';
 
 function AuthContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
+  const [sentToEmail, setSentToEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -28,30 +21,18 @@ function AuthContent() {
         invalid_link:   'That login link is invalid or expired. Request a new one.',
         missing_tokens: 'Login could not be completed. Request a new link.',
         session_error:  'Could not save your session. Try again.',
-        admin_required: 'Could not verify admin access. In Supabase Studio → users, set account_type to admin on the row whose id matches Authentication → Users (same UUID). Then sign in again.',
-        reviewer_required: 'Reviewer access only. Sign in with a reviewer account.',
+        admin_required: 'You do not have access to this area.',
+        admin_only:     'Sign-in is not available for this email.',
+        reviewer_required: 'Reviewer access only.',
+        student_required: 'Student access only.',
       };
       setError(messages[err] ?? 'Login failed. Please try again.');
     }
   }, [searchParams]);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session) return;
-      try {
-        const profile = await api.auth.me() as { account_type?: string };
-        const dest = DASHBOARD_MAP[profile.account_type ?? ''];
-        if (dest) router.replace(dest);
-      } catch {
-        /* stay on auth page */
-      }
-    });
-  }, [router]);
-
   const token = searchParams.get('token');
   const type = searchParams.get('type');
 
-  // Handle magic link callback
   if (token && type) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6" style={{ backgroundColor: 'var(--bg-page)' }}>
@@ -79,6 +60,9 @@ function AuthContent() {
     setLoading(true);
     setError('');
     setSuccess(false);
+    setSentToEmail('');
+
+    const trimmed = email.trim();
 
     try {
       const res = await fetch(
@@ -87,7 +71,7 @@ function AuthContent() {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email }),
+          body: JSON.stringify({ email: trimmed }),
         }
       );
       const raw = await res.text();
@@ -102,10 +86,11 @@ function AuthContent() {
           data?.error || (raw ? raw.slice(0, 200) : `Server error (${res.status}). Is the backend running on port 3001?`)
         );
       }
+      setSentToEmail(trimmed);
       setSuccess(true);
-      setEmail('');
-    } catch (err: any) {
-      setError(err?.message || 'An error occurred. Please try again.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'An error occurred. Please try again.';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -130,7 +115,9 @@ function AuthContent() {
             Orcred
           </h1>
           <p style={{ color: 'var(--fg-muted)' }}>
-            Enter your email to receive a login link
+            {isAdminOnlyAuth()
+              ? 'Admin access only — enter your Orcred admin email for a login link'
+              : 'Enter your email to receive a login link'}
           </p>
         </div>
 
@@ -148,11 +135,16 @@ function AuthContent() {
                 Check your email
               </p>
               <p style={{ color: 'var(--fg-muted)', marginTop: '8px' }}>
-                We've sent a login link to {email}. Click the link to sign in.
+                We&apos;ve sent a login link to <strong>{sentToEmail}</strong>. Click the link to sign in.
               </p>
             </div>
             <button
-              onClick={() => setSuccess(false)}
+              type="button"
+              onClick={() => {
+                setSuccess(false);
+                setSentToEmail('');
+                setEmail('');
+              }}
               className="w-full btn-secondary"
             >
               Send another link

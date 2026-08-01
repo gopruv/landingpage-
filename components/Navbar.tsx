@@ -100,24 +100,7 @@ export default function Navbar() {
             )
           )}
 
-          {/* Login button */}
-          <Link
-            href="/dashboard/auth"
-            className="font-label-sm uppercase tracking-[0.15em] text-[11px] px-5 py-2.5"
-            style={{
-              backgroundColor: "transparent",
-              color:            "#0f0d0c",
-              border:           "1px solid #0f0d0c",
-              borderRadius:     "100px",
-              transition:       "opacity 0.15s ease",
-            }}
-            onMouseEnter={e => ((e.currentTarget as HTMLElement).style.opacity = "0.6")}
-            onMouseLeave={e => ((e.currentTarget as HTMLElement).style.opacity = "1")}
-          >
-            Login
-          </Link>
-
-          {/* Apply Now — inside nav group */}
+          {/* Apply Now — primary CTA */}
           <Link
             href="/join-waitlist"
             className="font-label-sm uppercase tracking-[0.15em] text-[11px] px-5 py-2.5"

@@ -9,6 +9,7 @@ import RescheduleRequestForm, { isReschedulePending } from '@/components/shared/
 import PaymentSection from '@/components/student/PaymentSection';
 import { formatTentativeSessionDisplay } from '@/lib/sessionDisplay';
 import { getSessionJoinState } from '@/lib/sessionAccess';
+import { isStudentApplyEnabled, WAITLIST_PATH } from '@/lib/platformGates';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -328,17 +329,31 @@ export default function StudentDashboard() {
                   </div>
                 )}
 
-                <Link href="/dashboard/student/apply" style={{
-                  display: 'inline-flex', alignItems: 'center', padding: '10px 28px',
-                  backgroundColor: '#eb4511', color: '#fff', borderRadius: '50px',
-                  fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase',
-                  textDecoration: 'none', transition: 'opacity 0.15s',
-                }}
-                  onMouseEnter={e => ((e.currentTarget as HTMLElement).style.opacity = '0.8')}
-                  onMouseLeave={e => ((e.currentTarget as HTMLElement).style.opacity = '1')}
-                >
-                  Apply for Verification →
-                </Link>
+                {isStudentApplyEnabled() ? (
+                  <Link href="/dashboard/student/apply" style={{
+                    display: 'inline-flex', alignItems: 'center', padding: '10px 28px',
+                    backgroundColor: '#eb4511', color: '#fff', borderRadius: '50px',
+                    fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase',
+                    textDecoration: 'none', transition: 'opacity 0.15s',
+                  }}
+                    onMouseEnter={e => ((e.currentTarget as HTMLElement).style.opacity = '0.8')}
+                    onMouseLeave={e => ((e.currentTarget as HTMLElement).style.opacity = '1')}
+                  >
+                    Apply for Verification →
+                  </Link>
+                ) : (
+                  <Link href={WAITLIST_PATH} style={{
+                    display: 'inline-flex', alignItems: 'center', padding: '10px 28px',
+                    backgroundColor: '#eb4511', color: '#fff', borderRadius: '50px',
+                    fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase',
+                    textDecoration: 'none', transition: 'opacity 0.15s',
+                  }}
+                    onMouseEnter={e => ((e.currentTarget as HTMLElement).style.opacity = '0.8')}
+                    onMouseLeave={e => ((e.currentTarget as HTMLElement).style.opacity = '1')}
+                  >
+                    Join the waitlist →
+                  </Link>
+                )}
 
                 {/* Steps table */}
                 <div style={{ marginTop: '36px', borderTop: '1px solid rgba(15,13,12,0.07)', paddingTop: '28px' }}>

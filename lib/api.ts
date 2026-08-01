@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { getSafeSession } from './authSession';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -13,7 +13,7 @@ export class ApiError extends Error {
 }
 
 async function getToken(): Promise<string | null> {
-  const { data: { session } } = await supabase.auth.getSession();
+  const session = await getSafeSession({ refresh: true });
   return session?.access_token ?? null;
 }
 
@@ -108,6 +108,7 @@ export const api = {
       feedback_audio?: number;
       feedback_video?: number;
       feedback_notes?: string;
+      early_end_reason?: string;
     }) => request('/student/session/confirm', { method: 'POST', body: JSON.stringify(data) }),
   },
 

@@ -276,12 +276,20 @@ export default function AdminWorkflowSteps({
   }, [assignment?.reviewer_tasks]);
 
   const hasReviewer = !!assignment?.reviewers;
-  const sessionProposed =
-    assignment?.workflow_stage === 'session_proposed'
-    || (!!assignment?.proposed_session_notes && assignment?.status !== 'scheduled');
   const sessionApproved =
     !!assignment?.session_date
-    && (assignment?.status === 'scheduled' || assignment?.workflow_stage === 'session_approved');
+    && (
+      assignment?.status === 'scheduled'
+      || assignment?.workflow_stage === 'session_approved'
+      || isSessionDone(assignment)
+    );
+  const sessionProposed =
+    !sessionApproved
+    && !isSessionDone(assignment)
+    && (
+      assignment?.workflow_stage === 'session_proposed'
+      || (!!assignment?.proposed_session_notes && assignment?.status !== 'scheduled')
+    );
   const canAdminReschedule = !!assignment && !isSessionDone(assignment) && (
     !!assignment.session_date
     || !!assignment.proposed_session_at

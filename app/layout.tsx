@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import CookieBanner from "@/components/CookieBanner";
+import AuthSessionBootstrap from "@/components/AuthSessionBootstrap";
 
 export const metadata: Metadata = {
   title: "Orcred | The Standard for AI/ML Intelligence",
@@ -50,6 +51,7 @@ export default function RootLayout({
         />
       </head>
       <body className="selection:bg-accent-orange selection:text-white">
+        <AuthSessionBootstrap />
         {children}
         <Analytics />
         <CookieBanner />

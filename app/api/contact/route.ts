@@ -4,6 +4,14 @@ import { NextResponse } from "next/server";
 const apiKey = process.env.RESEND_API_KEY;
 const resend = apiKey ? new Resend(apiKey) : null;
 
+function adminInboxes(): string[] {
+  const fromEnv = (process.env.ADMIN_NOTIFY_EMAIL ?? "")
+    .split(",")
+    .map((e) => e.trim())
+    .filter(Boolean);
+  return fromEnv.length ? fromEnv : ["contact@orcred.com"];
+}
+
 /* ── Email template — matches site light theme ── */
 function buildEmail(subject: string, fields: Record<string, string>): string {
   const rows = Object.entries(fields)
@@ -153,7 +161,7 @@ function buildEmail(subject: string, fields: Record<string, string>): string {
 function getSubject(type: string, fields: Record<string, string>): string {
   const name = fields.name ?? fields["full name"] ?? "Someone";
   if (type === "verify")  return `Verification Application — ${name}`;
-  if (type === "review")  return `Reviewer Application — ${name}`;
+  if (type === "review" || type === "reviewer") return `Reviewer Application — ${name}`;
   return `Contact Message — ${name}`;
 }
 
@@ -170,12 +178,26 @@ export async function POST(req: Request) {
     const subject = getSubject(type, fields);
     const html    = buildEmail(subject, fields);
 
-    await resend.emails.send({
-      from:    "Orcred <noreply@orcred.com>",
-      to:      "contact@orcred.com",
-      subject,
-      html,
-    });
+    const recipients = adminInboxes();
+    const failures: string[] = [];
+
+    for (const to of recipients) {
+      try {
+        await resend.emails.send({
+          from:    "Orcred <noreply@orcred.com>",
+          to,
+          subject,
+          html,
+        });
+      } catch (err) {
+        console.error("Contact route error for", to, err);
+        failures.push(to);
+      }
+    }
+
+    if (failures.length === recipients.length) {
+      return NextResponse.json({ ok: false, error: "Failed to send" }, { status: 500 });
+    }
 
     return NextResponse.json({ ok: true });
   } catch (err) {

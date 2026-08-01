@@ -4,6 +4,15 @@ import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { supabase } from '@/lib/supabase';
+import { isAdminOnlyAuth } from '@/lib/platformGates';
+import { dashboardPathForRole } from '@/lib/roles';
+
+function readCallbackParams(searchParams: URLSearchParams): URLSearchParams {
+  if (typeof window === 'undefined') return searchParams;
+  const hash = window.location.hash.replace(/^#/, '');
+  if (hash) return new URLSearchParams(hash);
+  return searchParams;
+}
 
 function CallbackHandler() {
   const router = useRouter();
@@ -11,9 +20,10 @@ function CallbackHandler() {
 
   useEffect(() => {
     const handleCallback = async () => {
-      const access_token  = searchParams.get('access_token');
-      const refresh_token = searchParams.get('refresh_token');
-      const account_type  = searchParams.get('account_type');
+      const params = readCallbackParams(searchParams);
+      const access_token  = params.get('access_token');
+      const refresh_token = params.get('refresh_token');
+      const account_type  = params.get('account_type');
 
       if (!access_token || !refresh_token) {
         router.push('/dashboard/auth?error=missing_tokens');
@@ -27,13 +37,29 @@ function CallbackHandler() {
         return;
       }
 
-      // Full navigation so auth cookie is visible to middleware on the next request
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        console.error('[callback] session not persisted after setSession');
+        router.push('/dashboard/auth?error=session_error');
+        return;
+      }
+
+      if (isAdminOnlyAuth() && account_type !== 'admin') {
+        await supabase.auth.signOut();
+        router.push('/dashboard/auth?error=admin_only');
+        return;
+      }
+
       const map: Record<string, string> = {
         student:  '/dashboard/student',
         reviewer: '/dashboard/reviewer',
         admin:    '/dashboard/admin',
       };
-      window.location.href = map[account_type ?? ''] || '/dashboard';
+      window.location.href = map[account_type ?? ''] || dashboardPathForRole(account_type ?? undefined);
+      // Clear tokens from the address bar
+      if (window.location.hash) {
+        window.history.replaceState(null, '', window.location.pathname);
+      }
     };
 
     handleCallback();

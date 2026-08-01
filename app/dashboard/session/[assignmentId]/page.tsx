@@ -443,7 +443,9 @@ export default function SessionPage() {
   };
 
   const confirmSession = async () => {
-    if (data?.requires_early_end_reason && studentEarlyEndReason.trim().length < 10) {
+    const needsStudentEarlyReason =
+      !!data?.requires_early_end_reason && !data?.reviewer_early_end_reason;
+    if (needsStudentEarlyReason && studentEarlyEndReason.trim().length < 10) {
       setActionMsg('This session ended early — please explain why (min 10 characters).');
       return;
     }
@@ -455,7 +457,7 @@ export default function SessionPage() {
         ...(feedbackAudio != null ? { feedback_audio: feedbackAudio } : {}),
         ...(feedbackVideo != null ? { feedback_video: feedbackVideo } : {}),
         ...(feedbackNotesStudent.trim() ? { feedback_notes: feedbackNotesStudent.trim() } : {}),
-        ...(data?.requires_early_end_reason && studentEarlyEndReason.trim()
+        ...(needsStudentEarlyReason && studentEarlyEndReason.trim()
           ? { early_end_reason: studentEarlyEndReason.trim() }
           : {}),
       });
@@ -914,7 +916,7 @@ export default function SessionPage() {
                           marginBottom: 16,
                         }}
                       />
-                      {data.requires_early_end_reason && (
+                      {data.requires_early_end_reason && !data.reviewer_early_end_reason && (
                         <>
                           <p style={{ fontSize: 12, fontWeight: 600, margin: '0 0 6px', color: '#9a6500' }}>
                             Why did this session end early? (required)
