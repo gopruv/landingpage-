@@ -98,6 +98,120 @@ function useFocusedInputStyle(focused: boolean): React.CSSProperties {
   };
 }
 
+function getErrorModalContent(message: string): { title: string; body: string } {
+  const lower = message.toLowerCase();
+  if (lower.includes("already registered") || lower.includes("already joined")) {
+    return {
+      title: "You're already registered",
+      body: message,
+    };
+  }
+  return { title: "Unable to submit", body: message };
+}
+
+function WaitlistAlertModal({
+  message,
+  onClose,
+}: {
+  message: string;
+  onClose: () => void;
+}) {
+  const { title, body } = getErrorModalContent(message);
+
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        style={{ position: "fixed", inset: 0, background: "rgba(15,13,12,0.45)", zIndex: 300 }}
+        aria-hidden
+      />
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 301,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 16,
+          pointerEvents: "none",
+        }}
+      >
+        <motion.div
+          role="alertdialog"
+          aria-labelledby="waitlist-alert-title"
+          aria-describedby="waitlist-alert-body"
+          initial={{ opacity: 0, scale: 0.96, y: 8 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.96, y: 8 }}
+          transition={{ duration: 0.2, ease }}
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            width: "min(440px, 100%)",
+            background: "#fff",
+            borderRadius: 4,
+            padding: "32px 28px 28px",
+            boxShadow: "0 20px 56px rgba(15,13,12,0.2)",
+            border: "1px solid rgba(15,13,12,0.08)",
+            pointerEvents: "auto",
+          }}
+        >
+        <div
+          className="font-label-sm uppercase tracking-[0.14em] text-[10px] mb-3"
+          style={{ color: "#eb4511" }}
+        >
+          Waitlist
+        </div>
+        <h2
+          id="waitlist-alert-title"
+          style={{
+            fontFamily: "'Cormorant Garamond', Georgia, serif",
+            fontSize: "clamp(26px, 4vw, 32px)",
+            fontWeight: 500,
+            lineHeight: 1.15,
+            color: "#0f0d0c",
+            margin: "0 0 14px",
+          }}
+        >
+          {title}
+        </h2>
+        <p
+          id="waitlist-alert-body"
+          style={{
+            fontSize: "15px",
+            fontWeight: 400,
+            lineHeight: 1.7,
+            color: "rgba(15,13,12,0.62)",
+            margin: "0 0 28px",
+          }}
+        >
+          {body}
+        </p>
+        <button
+          type="button"
+          onClick={onClose}
+          className="font-label-sm uppercase tracking-[0.18em] text-[11px]"
+          style={{
+            width: "100%",
+            padding: "12px 24px",
+            background: "#eb4511",
+            color: "#fff",
+            border: "none",
+            borderRadius: 50,
+            cursor: "pointer",
+          }}
+        >
+          Got it
+        </button>
+        </motion.div>
+      </div>
+    </>
+  );
+}
+
 function SuccessView() {
   return (
     <motion.div
@@ -305,6 +419,11 @@ export default function JoinWaitlistPage() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: "var(--bg-page)" }}>
+      <AnimatePresence>
+        {error && !done && (
+          <WaitlistAlertModal key="waitlist-alert" message={error} onClose={() => setError("")} />
+        )}
+      </AnimatePresence>
       <div
         className="fixed inset-0 pointer-events-none"
         style={{
@@ -693,14 +812,6 @@ export default function JoinWaitlistPage() {
                           Fields marked <span style={{ color: "#eb4511" }}>*</span> are required
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                          {error && (
-                            <div
-                              className="font-label-sm text-[9px] tracking-[0.2em]"
-                              style={{ color: "#eb4511" }}
-                            >
-                              {error}
-                            </div>
-                          )}
                           <motion.button
                             type="submit"
                             disabled={loading || !canSubmit}
