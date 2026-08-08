@@ -35,7 +35,7 @@ const icons = {
     </svg>
   ),
   // Six-ray spark / asterisk = original idea / unique
-  Originality: () => (
+  ProblemSolving: () => (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
       stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
       <line x1="10" y1="2"   x2="10" y2="18"/>
@@ -66,8 +66,8 @@ const criteria = [
     desc: "Is the work clean enough that someone else could pick it up tomorrow? A project only you can run is a liability.",
   },
   {
-    Icon: icons.Originality,
-    title: "Originality",
+    Icon: icons.ProblemSolving,
+    title: "Problem solving",
     weight: "20%",
     desc: "Did they think, or did they follow? Genuine problem solving versus tutorial assembly — the difference always shows.",
   },

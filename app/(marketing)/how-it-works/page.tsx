@@ -89,7 +89,7 @@ const steps: Step[] = [
       { label: "Technical Depth",  weight: "35%", body: "How well you understand the architecture, algorithms, and decisions inside your system. The highest weighted dimension because it is the hardest to fake." },
       { label: "Communication",    weight: "25%", body: "How clearly you explained your thinking. Can you make a complex system understandable to a smart person who is not inside your head?" },
       { label: "Reproducibility",  weight: "20%", body: "Could someone else run and understand this project from what you have built and documented? A project only you can run is a liability." },
-      { label: "Originality",      weight: "20%", body: "Genuine problem solving versus tutorial following. Did you make real decisions or assemble existing pieces without understanding why?" },
+      { label: "Problem solving",  weight: "20%", body: "Genuine problem solving versus tutorial following. Did you make real decisions or assemble existing pieces without understanding why?" },
     ],
     scoreTable: [
       { range: "90 – 100", meaning: "Exceptional — reviewer recommended",                         pass: true  },

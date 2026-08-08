@@ -7,8 +7,16 @@ import ScoresSection from "@/components/ScoresSection";
 import ComparisonSection from "@/components/ComparisonSection";
 import CtaSection from "@/components/CtaSection";
 import ScrollProgress from "@/components/ScrollProgress";
+import { useEffect } from "react";
 
 export default function Home() {
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (!hash) return;
+    const el = document.querySelector(hash);
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+  }, []);
+
   return (
     <>
       <ScrollProgress />

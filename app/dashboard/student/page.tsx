@@ -4,11 +4,16 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { api, ApiError } from '@/lib/api';
-import { useSignOut } from '@/lib/useRequireRole';
+import { useRequireAuth } from '@/lib/useRequireAuth';
+import RescheduleRequestForm, { isReschedulePending } from '@/components/shared/RescheduleRequestForm';
+import PaymentSection from '@/components/student/PaymentSection';
+import { formatTentativeSessionDisplay } from '@/lib/sessionDisplay';
+import { getSessionJoinState } from '@/lib/sessionAccess';
+import { isStudentApplyEnabled, WAITLIST_PATH } from '@/lib/platformGates';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type State = 'new' | 'has_idea' | 'applied' | 'scheduled' | 'completed';
+type State = 'new' | 'has_idea' | 'applied' | 'reviewer_assigned' | 'scheduled' | 'completed';
 
 interface DashData {
   full_name:   string;
@@ -21,14 +26,29 @@ interface DashData {
     submitted_at: string;
     payment_at?:  string;
     session_date?: string;
+    assignment_id?: string;
+    status?: string;
+    utr_number?: string | null;
+    workflow_stage?: string;
+    status?: string;
+    assignment_id?: string;
+    proposed_session_notes?: string | null;
+    proposed_session_at?: string | null;
+    assignment_status?: string;
     score?: {
       total:           number;
       technical_depth: number;
       communication:   number;
       reproducibility: number;
-      originality:     number;
+      problem_solving:     number;
       passed:          boolean;
     };
+  };
+  credential?: {
+    credential_id: string;
+    credential_url: string;
+    issued_at: string;
+    linkedin_added: boolean;
   };
 }
 
@@ -39,54 +59,90 @@ const BG     = '#faf7f2';
 const BORDER = '1px solid rgba(15,13,12,0.1)';
 
 const STATE_META: Record<State, { label: string; color: string; bg: string; step: number }> = {
-  new:       { label: 'Not applied',          color: 'rgba(15,13,12,0.45)', bg: 'rgba(15,13,12,0.06)', step: 1 },
-  has_idea:  { label: 'Has project idea',      color: '#9a6500',             bg: 'rgba(184,121,0,0.1)', step: 1 },
-  applied:   { label: 'Application received',  color: '#eb4511',             bg: 'rgba(235,69,17,0.1)', step: 2 },
-  scheduled: { label: 'Session scheduled',     color: '#007a4a',             bg: 'rgba(0,122,74,0.1)',  step: 3 },
-  completed: { label: 'Review complete',       color: '#005fa3',             bg: 'rgba(0,95,163,0.1)',  step: 4 },
+  new:               { label: 'Not applied',          color: 'rgba(15,13,12,0.45)', bg: 'rgba(15,13,12,0.06)', step: 1 },
+  has_idea:          { label: 'Has project idea',      color: '#9a6500',             bg: 'rgba(184,121,0,0.1)', step: 1 },
+  applied:           { label: 'Application received',  color: '#eb4511',             bg: 'rgba(235,69,17,0.1)', step: 2 },
+  reviewer_assigned: { label: 'Reviewer assigned',     color: '#005fa3',             bg: 'rgba(0,95,163,0.1)',  step: 3 },
+  scheduled:         { label: 'Session scheduled',     color: '#007a4a',             bg: 'rgba(0,122,74,0.1)',  step: 4 },
+  completed:         { label: 'Review complete',       color: '#005fa3',             bg: 'rgba(0,95,163,0.1)',  step: 5 },
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function StudentDashboard() {
   const router = useRouter();
-  const signOut = useSignOut();
+  const { ready, signOut } = useRequireAuth();
   const [data,    setData]    = useState<DashData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState('');
+  const [copied,  setCopied]  = useState(false);
+
+  const mapScore = (s: Record<string, unknown> | null | undefined) => {
+    if (!s) return undefined;
+    return {
+      total:           (s.final_score ?? s.total_score) as number,
+      technical_depth: s.technical_depth as number,
+      communication:   s.communication as number,
+      reproducibility: s.reproducibility as number,
+      problem_solving:     s.problem_solving as number,
+      passed:          s.passed as boolean,
+    };
+  };
+
+  const loadDashboard = async () => {
+    const res = await api.student.dashboard() as any;
+    const raw = res?.data ?? res;
+    const stateMap: Record<number, State> = {
+      1: 'new',
+      2: 'has_idea',
+      3: 'applied',
+      4: 'reviewer_assigned',
+      5: 'scheduled',
+      6: 'completed',
+    };
+    const assignment = raw?.application?.reviewer_assignments?.[0];
+    const wf = raw?.application?.workflow_stage ?? assignment?.workflow_stage;
+    const profile = raw?.profile ?? {};
+    const scoreSource = raw?.application_score;
+    setData({
+      full_name:   profile.full_name ?? '',
+      email:       profile.email ?? '',
+      profile_completion: profile.profile_completion ?? 0,
+      state:       stateMap[raw?.state as number] ?? 'new',
+      project: raw?.active_idea
+        ? { name: raw.active_idea.project_name, tech_stack: raw.active_idea.tech_stack }
+        : raw?.application
+        ? { name: raw.application.project_name, tech_stack: raw.application.tech_stack }
+        : undefined,
+      application: raw?.application ? {
+        id:           raw.application.id,
+        submitted_at: raw.application.submitted_at,
+        payment_at:   raw.application.payment_at,
+        session_date: assignment?.session_date,
+        assignment_id: assignment?.id,
+        status: raw?.application?.status,
+        utr_number: raw?.application?.utr_number,
+        workflow_stage: wf,
+        status: raw.application.status,
+        assignment_id: assignment?.id,
+        proposed_session_notes: assignment?.proposed_session_notes,
+        proposed_session_at: assignment?.proposed_session_at,
+        assignment_status: assignment?.status,
+        score: mapScore(scoreSource),
+      } : undefined,
+      credential: raw?.credential ? {
+        credential_id:  raw.credential.credential_id,
+        credential_url: raw.credential.credential_url,
+        issued_at:      raw.credential.issued_at,
+        linkedin_added: raw.credential.linkedin_added ?? false,
+      } : undefined,
+    });
+  };
 
   useEffect(() => {
     (async () => {
       try {
-        const res = await api.student.dashboard() as any;
-        const raw = res?.data ?? res;
-        const stateMap: Record<number, State> = { 1:'new', 2:'has_idea', 3:'applied', 4:'scheduled', 5:'completed' };
-        const profile = raw?.profile ?? {};
-        setData({
-          full_name:   profile.full_name ?? '',
-          email:       profile.email ?? '',
-          profile_completion: profile.profile_completion ?? 0,
-          state:       stateMap[raw?.state as number] ?? 'new',
-          project: raw?.active_idea
-            ? { name: raw.active_idea.project_name, tech_stack: raw.active_idea.tech_stack }
-            : raw?.application
-            ? { name: raw.application.project_name, tech_stack: raw.application.tech_stack }
-            : undefined,
-          application: raw?.application ? {
-            id:           raw.application.id,
-            submitted_at: raw.application.submitted_at,
-            payment_at:   raw.application.payment_at,
-            session_date: raw.application.reviewer_assignments?.[0]?.session_date,
-            score: raw.credential?.scores ? {
-              total:           raw.credential.scores.final_score ?? raw.credential.scores.total_score,
-              technical_depth: raw.credential.scores.technical_depth,
-              communication:   raw.credential.scores.communication,
-              reproducibility: raw.credential.scores.reproducibility,
-              originality:     raw.credential.scores.originality,
-              passed:          raw.credential.scores.passed,
-            } : undefined,
-          } : undefined,
-        });
+        await loadDashboard();
       } catch (e) {
         if (e instanceof ApiError && e.status === 401) router.push('/dashboard/auth');
         else setError((e as any)?.message || 'Failed to load');
@@ -95,6 +151,29 @@ export default function StudentDashboard() {
       }
     })();
   }, [router]);
+
+  const copyCredentialUrl = async () => {
+    if (!data?.credential?.credential_url) return;
+    await navigator.clipboard.writeText(data.credential.credential_url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const addToLinkedIn = async () => {
+    if (!data?.credential) return;
+    const issued = new Date(data.credential.issued_at);
+    const url = new URL('https://www.linkedin.com/profile/add');
+    url.searchParams.set('startTask', 'CERTIFICATION_NAME');
+    url.searchParams.set('name', 'Orcred Verified');
+    url.searchParams.set('organizationName', 'Orcred');
+    url.searchParams.set('issueYear', String(issued.getFullYear()));
+    url.searchParams.set('issueMonth', String(issued.getMonth() + 1));
+    url.searchParams.set('certUrl', data.credential.credential_url);
+    window.open(url.toString(), '_blank');
+    try { await api.student.markLinkedIn(); } catch { /* non-fatal */ }
+  };
+
+  if (!ready) return null;
 
   if (loading) return (
     <div style={{ minHeight: '100vh', backgroundColor: BG, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT }}>
@@ -169,7 +248,7 @@ export default function StudentDashboard() {
             icon="📋"
             label="Application Status"
             value={meta.label}
-            sub={`Step ${meta.step} of 4`}
+            sub={`Step ${meta.step} of 5`}
             accent="#eb4511"
             small
           />
@@ -183,12 +262,16 @@ export default function StudentDashboard() {
           />
           <StatCard
             icon="📅"
-            label={data.state === 'scheduled' ? 'Session Date' : data.state === 'applied' ? 'Submitted' : data.state === 'completed' ? 'Score' : 'Next Step'}
+            label={data.state === 'scheduled' ? 'Session Date' : data.state === 'reviewer_assigned' ? 'Reviewer' : data.state === 'applied' ? 'Submitted' : data.state === 'completed' ? 'Score' : 'Next Step'}
             value={
               data.state === 'completed' && data.application?.score
                 ? `${data.application.score.total}/100`
                 : data.state === 'scheduled' && data.application?.session_date
                 ? new Date(data.application.session_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+                : data.state === 'reviewer_assigned' && data.application?.workflow_stage === 'session_proposed'
+                ? 'Tentative'
+                : data.state === 'reviewer_assigned'
+                ? (data.application?.workflow_stage === 'under_review' ? 'Under review' : 'Assigned')
                 : data.state === 'applied' && data.application?.submitted_at
                 ? new Date(data.application.submitted_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
                 : 'Apply now'
@@ -197,6 +280,12 @@ export default function StudentDashboard() {
               data.state === 'completed' && data.application?.score
                 ? data.application.score.passed ? '✓ Passed' : 'Not passed'
                 : data.state === 'scheduled' ? '45-min live review'
+                : data.state === 'reviewer_assigned' && data.application?.workflow_stage === 'session_proposed'
+                ? (formatTentativeSessionDisplay(data.application.proposed_session_notes) ?? 'Awaiting admin approval')
+                : data.state === 'reviewer_assigned'
+                ? (data.application?.workflow_stage === 'under_review'
+                  ? 'Thanks for your patience'
+                  : 'Your reviewer is preparing')
                 : data.state === 'applied' ? 'Under review'
                 : 'Get verified'
             }
@@ -240,23 +329,37 @@ export default function StudentDashboard() {
                   </div>
                 )}
 
-                <Link href="/get-verified" style={{
-                  display: 'inline-flex', alignItems: 'center', padding: '10px 28px',
-                  backgroundColor: '#eb4511', color: '#fff', borderRadius: '50px',
-                  fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase',
-                  textDecoration: 'none', transition: 'opacity 0.15s',
-                }}
-                  onMouseEnter={e => ((e.currentTarget as HTMLElement).style.opacity = '0.8')}
-                  onMouseLeave={e => ((e.currentTarget as HTMLElement).style.opacity = '1')}
-                >
-                  Apply for Verification →
-                </Link>
+                {isStudentApplyEnabled() ? (
+                  <Link href="/dashboard/student/apply" style={{
+                    display: 'inline-flex', alignItems: 'center', padding: '10px 28px',
+                    backgroundColor: '#eb4511', color: '#fff', borderRadius: '50px',
+                    fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase',
+                    textDecoration: 'none', transition: 'opacity 0.15s',
+                  }}
+                    onMouseEnter={e => ((e.currentTarget as HTMLElement).style.opacity = '0.8')}
+                    onMouseLeave={e => ((e.currentTarget as HTMLElement).style.opacity = '1')}
+                  >
+                    Apply for Verification →
+                  </Link>
+                ) : (
+                  <Link href={WAITLIST_PATH} style={{
+                    display: 'inline-flex', alignItems: 'center', padding: '10px 28px',
+                    backgroundColor: '#eb4511', color: '#fff', borderRadius: '50px',
+                    fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase',
+                    textDecoration: 'none', transition: 'opacity 0.15s',
+                  }}
+                    onMouseEnter={e => ((e.currentTarget as HTMLElement).style.opacity = '0.8')}
+                    onMouseLeave={e => ((e.currentTarget as HTMLElement).style.opacity = '1')}
+                  >
+                    Join the waitlist →
+                  </Link>
+                )}
 
                 {/* Steps table */}
                 <div style={{ marginTop: '36px', borderTop: '1px solid rgba(15,13,12,0.07)', paddingTop: '28px' }}>
                   {[
                     { num: '01', title: 'Submit your project',  body: 'Loom walkthrough, tech stack, your hardest decision, what broke.' },
-                    { num: '02', title: 'Live technical review', body: '45 min with a senior engineer who has read every line.' },
+                    { num: '02', title: 'Live technical review', body: '40 min with a senior engineer who has read every line.' },
                     { num: '03', title: 'Credential issued',    body: 'Pass and get your verified Orcred badge within 24 hours.' },
                   ].map((s, i) => (
                     <StepRow key={i} num={s.num} title={s.title} body={s.body} done={false} last={i === 2} />
@@ -288,6 +391,67 @@ export default function StudentDashboard() {
                 ].map((s, i) => (
                   <StepRow key={i} num={s.num} title={s.title} body={s.body} done={s.done} last={i === 4} />
                 ))}
+                {data.application?.id && (
+                  <PaymentSection
+                    applicationId={data.application.id}
+                    status={data.application.status}
+                    paymentAt={data.application.payment_at}
+                    utrNumber={data.application.utr_number}
+                    onSuccess={loadDashboard}
+                  />
+                )}
+              </div>
+            )}
+
+            {/* ── STATE 3b: reviewer assigned ── */}
+            {data.state === 'reviewer_assigned' && (
+              <div style={{ padding: '32px' }}>
+                <p style={{ fontSize: '11px', fontWeight: 600, color: '#005fa3', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '14px' }}>
+                  {data.application?.workflow_stage === 'under_review' ? 'Project under review' : 'You have a reviewer!'}
+                </p>
+                {data.project && (
+                  <div style={{ marginBottom: '28px' }}>
+                    <h2 style={{ fontSize: '22px', fontWeight: 400, letterSpacing: '-0.02em', color: '#0f0d0c', marginBottom: '4px' }}>
+                      {data.project.name}
+                    </h2>
+                    <p style={{ fontSize: '13px', color: 'rgba(15,13,12,0.45)' }}>{data.project.tech_stack}</p>
+                  </div>
+                )}
+                <p style={{ fontSize: '14px', color: 'rgba(15,13,12,0.55)', lineHeight: 1.8, marginBottom: '28px', maxWidth: '520px' }}>
+                  {data.application?.workflow_stage === 'under_review'
+                    ? 'Your project is under extended review. Thanks for your patience — we will email you when there is an update.'
+                    : data.application?.workflow_stage === 'session_proposed'
+                    ? 'Your reviewer submitted preferred session times. Our team is confirming the final slot — you will get an email once it is scheduled.'
+                    : 'A senior engineer has been assigned to review your application. Check this dashboard for updates. They will propose a session from your preferred availability.'}
+                </p>
+                {data.application?.workflow_stage === 'session_proposed' && formatTentativeSessionDisplay(data.application.proposed_session_notes) && (
+                  <div style={{ marginBottom: 24, padding: '14px 16px', background: 'rgba(184,121,0,0.08)', border: '1px solid rgba(184,121,0,0.2)' }}>
+                    <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9a6500', margin: '0 0 6px' }}>
+                      Tentative times (not confirmed yet)
+                    </p>
+                    <p style={{ fontSize: 14, color: 'rgba(15,13,12,0.65)', margin: 0, lineHeight: 1.55 }}>
+                      {formatTentativeSessionDisplay(data.application.proposed_session_notes)}
+                    </p>
+                  </div>
+                )}
+                {[
+                  { num: '01', title: 'Application submitted', body: data.application?.submitted_at ? new Date(data.application.submitted_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Done', done: true },
+                  { num: '02', title: 'Reviewer assigned', body: 'In progress', done: true },
+                  { num: '03', title: 'Session scheduling', body: data.application?.workflow_stage === 'session_proposed' ? 'Awaiting admin approval' : 'Reviewer selecting time', done: false },
+                  { num: '04', title: 'Live review session', body: '45–60 minutes on camera', done: false },
+                  { num: '05', title: 'Credential issued', body: 'Within 24 hrs of passing', done: false },
+                ].map((s, i) => (
+                  <StepRow key={i} num={s.num} title={s.title} body={s.body} done={s.done} last={i === 4} />
+                ))}
+
+                {data.application?.workflow_stage === 'session_proposed' && data.application?.id && (
+                  <RescheduleRequestForm
+                    role="student"
+                    applicationId={data.application.id}
+                    reschedulePending={isReschedulePending(data.application.proposed_session_notes)}
+                    onSuccess={loadDashboard}
+                  />
+                )}
               </div>
             )}
 
@@ -303,17 +467,29 @@ export default function StudentDashboard() {
                     <h2 style={{ fontSize: '28px', fontWeight: 400, letterSpacing: '-0.03em', color: '#0f0d0c', margin: '0 0 24px' }}>
                       {new Date(data.application.session_date).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                     </h2>
-                    <Link href="#" style={{
+                    <Link href={data.application.assignment_id ? `/dashboard/session/${data.application.assignment_id}?as=student` : '#'} style={{
                       display: 'inline-flex', alignItems: 'center', padding: '10px 28px',
-                      backgroundColor: '#eb4511', color: '#fff', borderRadius: '50px',
+                      backgroundColor: data.application.assignment_id && getSessionJoinState(data.application.session_date).canJoin ? '#eb4511' : 'rgba(15,13,12,0.2)',
+                      color: '#fff', borderRadius: '50px',
                       fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase',
                       textDecoration: 'none', transition: 'opacity 0.15s',
+                      pointerEvents: data.application.assignment_id ? 'auto' : 'none',
                     }}
                       onMouseEnter={e => ((e.currentTarget as HTMLElement).style.opacity = '0.8')}
                       onMouseLeave={e => ((e.currentTarget as HTMLElement).style.opacity = '1')}
                     >
                       Join Session →
                     </Link>
+                    <p style={{ fontSize: 12, color: 'rgba(15,13,12,0.45)', marginTop: 12, maxWidth: 420 }}>
+                      {getSessionJoinState(data.application.session_date).message}
+                    </p>
+
+                    <RescheduleRequestForm
+                      role="student"
+                      applicationId={data.application.id}
+                      reschedulePending={isReschedulePending(data.application.proposed_session_notes)}
+                      onSuccess={loadDashboard}
+                    />
                   </div>
                 )}
 
@@ -358,11 +534,23 @@ export default function StudentDashboard() {
                         : 'The bar is deliberately high. Review the feedback, keep building, and apply again when ready.'}
                     </p>
 
-                    {data.application.score.passed && (
-                      <div style={{ display: 'flex', gap: '10px', marginBottom: '36px' }}>
-                        <ActionBtn primary>Download Certificate</ActionBtn>
-                        <ActionBtn>Add to LinkedIn</ActionBtn>
-                      </div>
+                    {data.application.score.passed && data.credential && (
+                      <>
+                        <div style={{ marginBottom: 20, padding: '14px 16px', background: 'rgba(235,69,17,0.05)', border: '1px solid rgba(235,69,17,0.15)' }}>
+                          <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#eb4511', marginBottom: 6 }}>Credential ID</p>
+                          <p style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>{data.credential.credential_id}</p>
+                          <a href={data.credential.credential_url} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: '#eb4511', wordBreak: 'break-all' }}>
+                            {data.credential.credential_url}
+                          </a>
+                        </div>
+                        <div style={{ display: 'flex', gap: '10px', marginBottom: '36px', flexWrap: 'wrap' }}>
+                          <ActionBtn primary onClick={copyCredentialUrl}>{copied ? 'Copied ✓' : 'Copy verify link'}</ActionBtn>
+                          <ActionBtn onClick={() => window.open(data.credential!.credential_url, '_blank')}>View public page</ActionBtn>
+                          <ActionBtn onClick={addToLinkedIn}>
+                            {data.credential.linkedin_added ? 'Add to LinkedIn again' : 'Add to LinkedIn'}
+                          </ActionBtn>
+                        </div>
+                      </>
                     )}
 
                     {/* Score breakdown bars */}
@@ -372,7 +560,7 @@ export default function StudentDashboard() {
                         { label: 'Technical Depth',  score: data.application.score.technical_depth,  weight: 35 },
                         { label: 'Communication',    score: data.application.score.communication,    weight: 25 },
                         { label: 'Reproducibility',  score: data.application.score.reproducibility,  weight: 20 },
-                        { label: 'Originality',      score: data.application.score.originality,      weight: 20 },
+                        { label: 'Problem solving',  score: data.application.score.problem_solving,  weight: 20 },
                       ].map(d => (
                         <div key={d.label} style={{ marginBottom: '18px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '7px' }}>
@@ -567,10 +755,11 @@ function InfoItem({ text, check }: { text: string; check?: boolean }) {
   );
 }
 
-function ActionBtn({ children, primary }: { children: React.ReactNode; primary?: boolean }) {
+function ActionBtn({ children, primary, onClick }: { children: React.ReactNode; primary?: boolean; onClick?: () => void }) {
   const [hov, setHov] = useState(false);
   return (
     <button
+      onClick={onClick}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{

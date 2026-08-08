@@ -5,6 +5,7 @@ import {
   dashboardPathForRole,
   type AccountType,
 } from '@/lib/roles';
+import { vercelProtectionBypassHeaders } from '@/lib/vercelProtectionBypass';
 
 function parseSessionCookie(raw: string): string | null {
   for (const value of [raw, decodeURIComponent(raw)]) {
@@ -54,7 +55,10 @@ async function getAuthMe(
 
   try {
     const res = await fetch(`${apiUrl}/api/v1/auth/me`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        Authorization: `Bearer ${token}`,
+        ...vercelProtectionBypassHeaders(),
+      },
       cache: 'no-store',
     });
     if (!res.ok) return null;

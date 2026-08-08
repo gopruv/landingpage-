@@ -1,7 +1,7 @@
-import { ReactNode } from 'react';
+'use client';
 
 import RequireRoleGate from '@/components/RequireRoleGate';
 
-export default function ReviewerDashboardLayout({ children }: { children: ReactNode }) {
+export default function ReviewerLayout({ children }: { children: React.ReactNode }) {
   return <RequireRoleGate role="reviewer">{children}</RequireRoleGate>;
 }

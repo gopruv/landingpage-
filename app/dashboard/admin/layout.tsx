@@ -1,7 +1,7 @@
-import { ReactNode } from 'react';
+'use client';
 
 import RequireRoleGate from '@/components/RequireRoleGate';
 
-export default function AdminDashboardLayout({ children }: { children: ReactNode }) {
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return <RequireRoleGate role="admin">{children}</RequireRoleGate>;
 }

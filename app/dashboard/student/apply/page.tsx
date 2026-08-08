@@ -1,8 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useRequireAuth } from '@/lib/useRequireAuth';
+import { supabase } from '@/lib/supabase';
+import { validateGithubUrl, validateLinkedinUrl, validateLoomUrl, normalizeUrl } from '@/lib/validators';
+import { AVAILABILITY_OPTIONS, TECH_STACK_TAGS, TIMEZONES } from '@/lib/form-constants';
+import SignupDisabledNotice from '@/components/SignupDisabledNotice';
+import { isStudentApplyEnabled } from '@/lib/platformGates';
 
 interface ApplicationFormData {
   // Step 1
@@ -27,7 +33,7 @@ interface ApplicationFormData {
 
   // Step 4
   availability_week_1: string[];
-  availability_week_2: string[];
+  availability_other: string;
   timezone: string;
   terms_confirmed: boolean;
   recording_consent: boolean;
@@ -40,131 +46,249 @@ const STEPS = [
   { number: 4, label: 'Schedule & Payment' },
 ];
 
-// Mock pre-filled data
-const MOCK_PROFILE = {
-  full_name: 'Pragathii',
-  email: 'pragathii@example.com',
-  linkedin_url: 'https://linkedin.com/in/pragathii',
-  college: 'Indian Institute of Technology',
-  graduation_year: '2025',
+const EMPTY_FORM: ApplicationFormData = {
+  full_name: '',
+  email: '',
+  linkedin_url: '',
+  college: '',
+  graduation_year: '',
+  project_name: '',
+  tech_stack: '',
+  github_url: '',
+  loom_url: '',
+  build_decision_1: '',
+  build_decision_2: '',
+  build_decision_3: '',
+  what_broke: '',
+  ai_tools_used: '',
+  availability_week_1: [],
+  availability_other: '',
+  timezone: typeof Intl !== 'undefined'
+    ? Intl.DateTimeFormat().resolvedOptions().timeZone
+    : 'Asia/Kolkata',
+  terms_confirmed: false,
+  recording_consent: false,
 };
 
-const MOCK_PROJECT = {
-  project_name: 'Real-time Collaborative Document Editor',
-  tech_stack: 'React, Node.js, WebSocket, MongoDB',
-  github_url: 'https://github.com/pragathii/doc-editor',
-  loom_url: 'https://loom.com/share/xxx',
-};
+const toggleTag = (tags: string[], tag: string) =>
+  tags.includes(tag) ? tags.filter((t) => t !== tag) : [...tags, tag];
+
+/** Map selected availability labels to API slot format */
+function optionsToAvailability(options: string[], timezone: string, other?: string) {
+  const today = new Date();
+  const slots = options.map((opt, i) => {
+    const d = new Date(today);
+    d.setDate(d.getDate() + i + 1);
+    const hour = opt.toLowerCase().includes('evening') ? '18:00'
+      : opt.toLowerCase().includes('afternoon') ? '14:00' : '10:00';
+    return { date: d.toISOString().split('T')[0], time: hour, timezone, description: opt };
+  });
+  if (other?.trim()) {
+    const d = new Date(today);
+    d.setDate(d.getDate() + options.length + 1);
+    slots.push({ date: d.toISOString().split('T')[0], time: '12:00', timezone, description: other.trim() });
+  }
+  return slots;
+}
+
+const DEEP_DIVE_MIN = 50;
+const AI_TOOLS_MIN = 10;
+
+function MinLengthHint({ value, min }: { value: string; min: number }) {
+  const len = value.trim().length;
+  const ok = len >= min;
+  return (
+    <p
+      style={{
+        fontSize: 12,
+        marginTop: 4,
+        color: ok ? 'var(--fg-faint)' : '#ba1a1a',
+      }}
+    >
+      {ok
+        ? `${len} characters — minimum met`
+        : `${len} / ${min} characters minimum${len > 0 ? ` (${min - len} more needed)` : ''}`}
+    </p>
+  );
+}
+
+function collectStepErrors(step: number, data: ApplicationFormData): Record<string, string> {
+  const newErrors: Record<string, string> = {};
+
+  if (step === 1) {
+    if (!data.full_name.trim()) newErrors.full_name = 'Name is required';
+    if (!data.college.trim()) newErrors.college = 'College is required';
+    if (!data.graduation_year.trim()) {
+      newErrors.graduation_year = 'Graduation year is required';
+    } else {
+      const year = parseInt(data.graduation_year, 10);
+      if (Number.isNaN(year) || year < 2000 || year > 2035) {
+        newErrors.graduation_year = 'Enter a valid graduation year';
+      }
+    }
+    const linkedinErr = validateLinkedinUrl(data.linkedin_url);
+    if (linkedinErr) newErrors.linkedin_url = linkedinErr;
+  }
+
+  if (step === 2) {
+    if (!data.project_name.trim()) newErrors.project_name = 'Project name is required';
+    if (!data.tech_stack.trim()) newErrors.tech_stack = 'Select at least one tech tag';
+    const gh = validateGithubUrl(data.github_url);
+    if (gh) newErrors.github_url = gh;
+    const loom = validateLoomUrl(data.loom_url);
+    if (loom) newErrors.loom_url = loom;
+  }
+
+  if (step === 3) {
+    const minLen = (field: string, label: string, min: number) => {
+      const v = field.trim();
+      if (!v) newErrors[label] = `Required — at least ${min} characters`;
+      else if (v.length < min) newErrors[label] = `${min - v.length} more characters needed (${v.length}/${min})`;
+    };
+    minLen(data.build_decision_1, 'build_decision_1', DEEP_DIVE_MIN);
+    minLen(data.build_decision_2, 'build_decision_2', DEEP_DIVE_MIN);
+    minLen(data.build_decision_3, 'build_decision_3', DEEP_DIVE_MIN);
+    minLen(data.what_broke, 'what_broke', DEEP_DIVE_MIN);
+    if (!data.ai_tools_used.trim()) {
+      newErrors.ai_tools_used = `Required — at least ${AI_TOOLS_MIN} characters`;
+    } else if (data.ai_tools_used.trim().length < AI_TOOLS_MIN) {
+      const len = data.ai_tools_used.trim().length;
+      newErrors.ai_tools_used = `${AI_TOOLS_MIN - len} more characters needed (${len}/${AI_TOOLS_MIN})`;
+    }
+  }
+
+  if (step === 4) {
+    if (!data.terms_confirmed) newErrors.terms = 'Please confirm the terms';
+    if (!data.recording_consent) newErrors.recording = 'Please consent to recording';
+    if (data.availability_week_1.length < 3) {
+      newErrors.availability = 'Select at least 3 availability options';
+    }
+  }
+
+  return newErrors;
+}
 
 export default function ApplicationPage() {
   const router = useRouter();
+  const { ready } = useRequireAuth();
+  const [loadingProfile, setLoadingProfile] = useState(true);
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const [formData, setFormData] = useState<ApplicationFormData>({
-    // Step 1
-    full_name: MOCK_PROFILE.full_name,
-    email: MOCK_PROFILE.email,
-    linkedin_url: MOCK_PROFILE.linkedin_url,
-    college: MOCK_PROFILE.college,
-    graduation_year: MOCK_PROFILE.graduation_year,
+  const [formData, setFormData] = useState<ApplicationFormData>(EMPTY_FORM);
 
-    // Step 2
-    project_name: MOCK_PROJECT.project_name,
-    tech_stack: MOCK_PROJECT.tech_stack,
-    github_url: MOCK_PROJECT.github_url,
-    loom_url: MOCK_PROJECT.loom_url,
+  useEffect(() => {
+    if (!ready) return;
+    (async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const res = await api.student.profile() as { data?: Record<string, unknown> };
+        const profile = res?.data ?? res as Record<string, unknown>;
+        setFormData((prev) => ({
+          ...prev,
+          full_name: String(profile.full_name ?? prev.full_name),
+          email: String(profile.email ?? session?.user.email ?? prev.email),
+          linkedin_url: String(profile.linkedin_url ?? prev.linkedin_url),
+          college: String(profile.college ?? prev.college),
+          graduation_year: profile.graduation_year != null
+            ? String(profile.graduation_year)
+            : prev.graduation_year,
+        }));
+      } catch {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user.email) {
+          setFormData((prev) => ({ ...prev, email: session.user.email! }));
+        }
+      } finally {
+        setLoadingProfile(false);
+      }
+    })();
+  }, [ready]);
 
-    // Step 3
-    build_decision_1: '',
-    build_decision_2: '',
-    build_decision_3: '',
-    what_broke: '',
-    ai_tools_used: '',
-
-    // Step 4
-    availability_week_1: [],
-    availability_week_2: [],
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    terms_confirmed: false,
-    recording_consent: false,
-  });
-
-  const handleInputChange = (field: string, value: string | boolean) => {
+  const handleInputChange = (field: string, value: string | boolean | string[]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: '' }));
     }
   };
 
-  const validateStep = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (currentStep === 1) {
-      if (!formData.full_name.trim()) newErrors.full_name = 'Name is required';
-      if (!formData.linkedin_url.trim()) newErrors.linkedin_url = 'LinkedIn URL is required';
-    }
-
-    if (currentStep === 2) {
-      if (!formData.github_url.trim()) newErrors.github_url = 'GitHub URL is required';
-      if (!formData.loom_url.trim()) newErrors.loom_url = 'Loom URL is required';
-    }
-
-    if (currentStep === 3) {
-      if (!formData.build_decision_1.trim()) newErrors.build_decision_1 = 'This field is required';
-      if (!formData.build_decision_2.trim()) newErrors.build_decision_2 = 'This field is required';
-      if (!formData.build_decision_3.trim()) newErrors.build_decision_3 = 'This field is required';
-      if (!formData.what_broke.trim()) newErrors.what_broke = 'This field is required';
-      if (!formData.ai_tools_used.trim()) newErrors.ai_tools_used = 'Please declare AI tools used';
-    }
-
-    if (currentStep === 4) {
-      if (!formData.terms_confirmed) newErrors.terms = 'Please confirm the terms';
-      if (!formData.recording_consent) newErrors.recording = 'Please consent to recording';
-    }
-
-    setErrors(newErrors);
+  const validateStep = (step = currentStep): boolean => {
+    const newErrors = collectStepErrors(step, formData);
+    setErrors((prev) => {
+      const next = { ...prev };
+      // Clear errors for fields validated on this step
+      const stepFields: Record<number, string[]> = {
+        1: ['full_name', 'college', 'graduation_year', 'linkedin_url'],
+        2: ['project_name', 'tech_stack', 'github_url', 'loom_url'],
+        3: ['build_decision_1', 'build_decision_2', 'build_decision_3', 'what_broke', 'ai_tools_used'],
+        4: ['terms', 'recording', 'availability'],
+      };
+      for (const key of stepFields[step] ?? []) delete next[key];
+      return { ...next, ...newErrors };
+    });
     return Object.keys(newErrors).length === 0;
   };
 
+  const validateAllSteps = (): number | null => {
+    let allErrors: Record<string, string> = {};
+    let firstBadStep: number | null = null;
+    for (let s = 1; s <= 4; s++) {
+      const stepErrors = collectStepErrors(s, formData);
+      if (Object.keys(stepErrors).length > 0 && firstBadStep === null) firstBadStep = s;
+      allErrors = { ...allErrors, ...stepErrors };
+    }
+    setErrors(allErrors);
+    return firstBadStep;
+  };
+
   const handleNext = () => {
-    if (validateStep()) {
-      if (currentStep < 4) {
-        setCurrentStep(currentStep + 1);
-      }
+    if (validateStep(currentStep)) {
+      if (currentStep < 4) setCurrentStep(currentStep + 1);
     }
   };
 
   const handleSubmit = async () => {
-    if (!validateStep()) return;
+    const badStep = validateAllSteps();
+    if (badStep !== null) {
+      setCurrentStep(badStep);
+      return;
+    }
     setSubmitting(true);
     try {
+      const linkedinUrl = normalizeUrl(formData.linkedin_url);
+      const githubUrl = normalizeUrl(formData.github_url);
+      const loomUrl = normalizeUrl(formData.loom_url);
+
       // Step 1: update profile
       await api.student.updateProfile({
         full_name: formData.full_name,
-        linkedin_url: formData.linkedin_url,
+        linkedin_url: linkedinUrl,
         college: formData.college,
-        graduation_year: formData.graduation_year,
+        graduation_year: formData.graduation_year
+          ? parseInt(formData.graduation_year, 10)
+          : undefined,
       });
 
-      // Step 2: submit application
+      const availability = optionsToAvailability(
+        formData.availability_week_1,
+        formData.timezone,
+        formData.availability_other,
+      );
+
       await api.student.createApplication({
         project_name: formData.project_name,
         tech_stack: formData.tech_stack,
-        github_url: formData.github_url,
-        loom_url: formData.loom_url,
-        build_decision_1: formData.build_decision_1,
-        build_decision_2: formData.build_decision_2,
-        build_decision_3: formData.build_decision_3,
-        what_broke: formData.what_broke,
-        ai_tools_used: formData.ai_tools_used,
-        availability_week_1: formData.availability_week_1,
-        availability_week_2: formData.availability_week_2,
-        timezone: formData.timezone,
-        terms_confirmed: formData.terms_confirmed,
-        recording_consent: formData.recording_consent,
+        github_url: githubUrl,
+        loom_url: loomUrl,
+        build_decision_1: formData.build_decision_1.trim(),
+        build_decision_2: formData.build_decision_2.trim(),
+        build_decision_3: formData.build_decision_3.trim(),
+        what_broke: formData.what_broke.trim(),
+        ai_tools_used: formData.ai_tools_used.trim(),
+        availability,
+        recording_consent: true,
       });
 
       setSubmitted(true);
@@ -174,6 +298,24 @@ export default function ApplicationPage() {
       setSubmitting(false);
     }
   };
+
+  if (!ready || loadingProfile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--bg-page)' }}>
+        <p style={{ color: 'var(--fg-muted)', fontSize: '14px' }}>Loading…</p>
+      </div>
+    );
+  }
+
+  if (!isStudentApplyEnabled()) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6" style={{ backgroundColor: 'var(--bg-page)' }}>
+        <div className="w-full max-w-md">
+          <SignupDisabledNotice />
+        </div>
+      </div>
+    );
+  }
 
   if (submitted) {
     return (
@@ -412,7 +554,7 @@ export default function ApplicationPage() {
                 )}
               </div>
 
-              {/* College & Year (Read-only) */}
+              {/* College & Year */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div>
                   <label
@@ -430,16 +572,22 @@ export default function ApplicationPage() {
                   <input
                     type="text"
                     value={formData.college}
-                    disabled
+                    onChange={(e) => handleInputChange('college', e.target.value)}
+                    placeholder="Your college or university"
                     className="w-full px-4 py-3"
                     style={{
-                      backgroundColor: 'var(--bg-alt)',
+                      backgroundColor: 'var(--bg-page)',
                       borderRadius: '2px',
                       border: '1px solid',
-                      borderColor: 'var(--border)',
-                      color: 'var(--fg-muted)',
+                      borderColor: errors.college ? '#ba1a1a' : 'var(--border)',
+                      color: 'var(--fg)',
                     }}
                   />
+                  {errors.college && (
+                    <p style={{ color: '#ba1a1a', fontSize: '12px', marginTop: '4px' }}>
+                      {errors.college}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label
@@ -455,18 +603,26 @@ export default function ApplicationPage() {
                     Graduation Year
                   </label>
                   <input
-                    type="text"
+                    type="number"
+                    min={2020}
+                    max={2035}
                     value={formData.graduation_year}
-                    disabled
+                    onChange={(e) => handleInputChange('graduation_year', e.target.value)}
+                    placeholder="e.g. 2026"
                     className="w-full px-4 py-3"
                     style={{
-                      backgroundColor: 'var(--bg-alt)',
+                      backgroundColor: 'var(--bg-page)',
                       borderRadius: '2px',
                       border: '1px solid',
-                      borderColor: 'var(--border)',
-                      color: 'var(--fg-muted)',
+                      borderColor: errors.graduation_year ? '#ba1a1a' : 'var(--border)',
+                      color: 'var(--fg)',
                     }}
                   />
+                  {errors.graduation_year && (
+                    <p style={{ color: '#ba1a1a', fontSize: '12px', marginTop: '4px' }}>
+                      {errors.graduation_year}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -483,7 +639,7 @@ export default function ApplicationPage() {
                 <h2 className="text-h2">Project Details</h2>
               </div>
 
-              {/* Project Name (Read-only) */}
+              {/* Project Name */}
               <div>
                 <label
                   className="block mb-2"
@@ -495,24 +651,30 @@ export default function ApplicationPage() {
                     textTransform: 'uppercase',
                   }}
                 >
-                  Project Name
+                  Project Name *
                 </label>
                 <input
                   type="text"
                   value={formData.project_name}
-                  disabled
+                  onChange={(e) => handleInputChange('project_name', e.target.value)}
+                  placeholder="What did you build?"
                   className="w-full px-4 py-3"
                   style={{
-                    backgroundColor: 'var(--bg-alt)',
+                    backgroundColor: 'var(--bg-page)',
                     borderRadius: '2px',
                     border: '1px solid',
-                    borderColor: 'var(--border)',
-                    color: 'var(--fg-muted)',
+                    borderColor: errors.project_name ? '#ba1a1a' : 'var(--border)',
+                    color: 'var(--fg)',
                   }}
                 />
+                {errors.project_name && (
+                  <p style={{ color: '#ba1a1a', fontSize: '12px', marginTop: '4px' }}>
+                    {errors.project_name}
+                  </p>
+                )}
               </div>
 
-              {/* Tech Stack (Read-only) */}
+              {/* Tech Stack */}
               <div>
                 <label
                   className="block mb-2"
@@ -524,21 +686,32 @@ export default function ApplicationPage() {
                     textTransform: 'uppercase',
                   }}
                 >
-                  Tech Stack
+                  Tech Stack * (select tags)
                 </label>
-                <input
-                  type="text"
-                  value={formData.tech_stack}
-                  disabled
-                  className="w-full px-4 py-3"
-                  style={{
-                    backgroundColor: 'var(--bg-alt)',
-                    borderRadius: '2px',
-                    border: '1px solid',
-                    borderColor: 'var(--border)',
-                    color: 'var(--fg-muted)',
-                  }}
-                />
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
+                  {TECH_STACK_TAGS.map((tag) => {
+                    const selected = formData.tech_stack.split(',').map((t) => t.trim()).filter(Boolean).includes(tag);
+                    return (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => {
+                          const current = formData.tech_stack.split(',').map((t) => t.trim()).filter(Boolean);
+                          handleInputChange('tech_stack', toggleTag(current, tag).join(', '));
+                        }}
+                        style={{
+                          padding: '6px 12px', fontSize: 12, borderRadius: 20, cursor: 'pointer',
+                          border: `1px solid ${selected ? '#eb4511' : 'var(--border)'}`,
+                          background: selected ? 'rgba(235,69,17,0.1)' : 'transparent',
+                          color: selected ? '#eb4511' : 'var(--fg)',
+                        }}
+                      >
+                        {tag}
+                      </button>
+                    );
+                  })}
+                </div>
+                {errors.tech_stack && <p style={{ color: '#ba1a1a', fontSize: 12 }}>{errors.tech_stack}</p>}
               </div>
 
               {/* GitHub URL */}
@@ -624,6 +797,10 @@ export default function ApplicationPage() {
                 />
                 <h2 className="text-h2">Deep Dive</h2>
               </div>
+              <p style={{ color: 'var(--fg-muted)', fontSize: 13, marginBottom: 20, lineHeight: 1.55 }}>
+                Each answer below needs at least <strong>{DEEP_DIVE_MIN} characters</strong> so reviewers have enough context.
+                AI tools: at least <strong>{AI_TOOLS_MIN} characters</strong>.
+              </p>
 
               {/* Decision 1 */}
               <div>
@@ -660,6 +837,7 @@ export default function ApplicationPage() {
                     {errors.build_decision_1}
                   </p>
                 )}
+                <MinLengthHint value={formData.build_decision_1} min={DEEP_DIVE_MIN} />
               </div>
 
               {/* Decision 2 */}
@@ -697,6 +875,7 @@ export default function ApplicationPage() {
                     {errors.build_decision_2}
                   </p>
                 )}
+                <MinLengthHint value={formData.build_decision_2} min={DEEP_DIVE_MIN} />
               </div>
 
               {/* Decision 3 */}
@@ -734,6 +913,7 @@ export default function ApplicationPage() {
                     {errors.build_decision_3}
                   </p>
                 )}
+                <MinLengthHint value={formData.build_decision_3} min={DEEP_DIVE_MIN} />
               </div>
 
               {/* What Broke */}
@@ -771,6 +951,7 @@ export default function ApplicationPage() {
                     {errors.what_broke}
                   </p>
                 )}
+                <MinLengthHint value={formData.what_broke} min={DEEP_DIVE_MIN} />
               </div>
 
               {/* AI Tools */}
@@ -808,6 +989,7 @@ export default function ApplicationPage() {
                     {errors.ai_tools_used}
                   </p>
                 )}
+                <MinLengthHint value={formData.ai_tools_used} min={AI_TOOLS_MIN} />
                 <p style={{ color: 'var(--fg-faint)', fontSize: '12px', marginTop: '8px' }}>
                   Be specific and honest. Using AI tools is fine. Claiming you didn't when you did is grounds for disqualification.
                 </p>
@@ -841,6 +1023,7 @@ export default function ApplicationPage() {
                   Timezone
                 </label>
                 <input
+                  list="timezone-options"
                   type="text"
                   value={formData.timezone}
                   onChange={(e) => handleInputChange('timezone', e.target.value)}
@@ -853,6 +1036,9 @@ export default function ApplicationPage() {
                     color: 'var(--fg)',
                   }}
                 />
+                <datalist id="timezone-options">
+                  {TIMEZONES.map((tz) => <option key={tz} value={tz} />)}
+                </datalist>
               </div>
 
               {/* Availability Week 1 */}
@@ -867,18 +1053,13 @@ export default function ApplicationPage() {
                     textTransform: 'uppercase',
                   }}
                 >
-                  Availability Week 1
+                  Availability *
                 </label>
                 <p style={{ color: 'var(--fg-muted)', fontSize: '12px', marginBottom: '8px' }}>
-                  Select 3 preferred time slots
+                  Select at least 3 windows that work for you
                 </p>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
-                  {[
-                    'Monday 10:00 AM',
-                    'Tuesday 2:00 PM',
-                    'Wednesday 10:00 AM',
-                    'Thursday 3:00 PM',
-                  ].map((slot) => (
+                  {AVAILABILITY_OPTIONS.map((slot) => (
                     <label
                       key={slot}
                       style={{
@@ -914,6 +1095,22 @@ export default function ApplicationPage() {
                     </label>
                   ))}
                 </div>
+                <input
+                  type="text"
+                  placeholder="Other availability (optional)"
+                  value={formData.availability_other}
+                  onChange={(e) => handleInputChange('availability_other', e.target.value)}
+                  className="w-full px-4 py-3 mt-3"
+                  style={{ border: '1px solid var(--border)', borderRadius: 2 }}
+                />
+                {errors.availability && (
+                  <p style={{ color: '#ba1a1a', fontSize: '12px', marginTop: '8px' }}>{errors.availability}</p>
+                )}
+              </div>
+
+              {/* PRD upload — deferred v1 */}
+              <div style={{ padding: 12, background: 'rgba(15,13,12,0.04)', fontSize: 12, color: 'rgba(15,13,12,0.5)' }}>
+                PRD upload coming soon — optional project doc attachment will be added in a future release.
               </div>
 
               {/* Checkboxes */}

@@ -83,7 +83,7 @@ export default function HeroSection({ onApply: _ }: HeroProps) {
           transition={{ duration: 0.8, delay: 0.4 }}
         >
           <Link
-            href="/get-verified"
+            href="/join-waitlist"
             className="inline-flex items-center px-6 py-2.5 font-label-sm uppercase tracking-[0.2em] text-[11px] transition-all duration-200"
             style={{ backgroundColor: "#eb4511", color: "#ffffff", border: "1px solid #eb4511", borderRadius: "50px", transition: "opacity 0.15s ease" }}
             onMouseEnter={e => ((e.currentTarget as HTMLElement).style.opacity = "0.8")}
@@ -112,7 +112,7 @@ export default function HeroSection({ onApply: _ }: HeroProps) {
         >
           {[
             { value: "40–60%", label: "Pass rate" },
-            { value: "45 min",  label: "Live review" },
+            { value: "40 min",  label: "Live review" },
             { value: "24 hrs",  label: "Turnaround" },
           ].map((s, i, arr) => (
             <div key={i} style={{ display: "flex", alignItems: "center" }}>
