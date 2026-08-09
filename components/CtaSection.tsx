@@ -28,25 +28,15 @@ export default function CtaSection() {
         </motion.div>
 
         <motion.div
-          className="mb-6"
+          className="mb-10"
           style={{ fontSize: "clamp(22px, 2.8vw, 38px)", fontWeight: 400, letterSpacing: "-0.02em", lineHeight: 1.15, color: "#0f0d0c" }}
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 1, delay: 0.1, ease }}
         >
-          If you built something real<br />and you understand it — come in.
+          You built something real.<br />Prove it.
         </motion.div>
-
-        <motion.p
-          style={{ fontSize: "clamp(14px, 1.2vw, 16px)", lineHeight: 1.8, color: "#4a4440", maxWidth: "480px", margin: "0 auto 40px" }}
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.9, delay: 0.2 }}
-        >
-          One submission. One review. A credential that holds. The standard does not move.
-        </motion.p>
 
         <motion.div
           initial={{ opacity: 0 }}
@@ -61,7 +51,7 @@ export default function CtaSection() {
             onMouseEnter={e => ((e.currentTarget as HTMLElement).style.opacity = "0.8")}
             onMouseLeave={e => ((e.currentTarget as HTMLElement).style.opacity = "1")}
           >
-            Apply for Verification
+            Join the Waitlist
           </Link>
         </motion.div>
 

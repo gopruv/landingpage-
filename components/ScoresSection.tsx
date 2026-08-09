@@ -51,25 +51,25 @@ const criteria = [
     Icon: icons.TechnicalDepth,
     title: "Technical Depth",
     weight: "35%",
-    desc: "Did they build something that works — and do they know why it works? The highest-weighted dimension because it is the hardest to fake.",
+    desc: "Do you know why it works — not just that it does?",
   },
   {
     Icon: icons.Communication,
     title: "Communication",
     weight: "25%",
-    desc: "Can they walk a room through their decisions without notes? Clarity of thought under live questioning separates builders from memorisers.",
+    desc: "Can you explain your decisions clearly under live questioning?",
+  },
+  {
+    Icon: icons.ProblemSolving,
+    title: "Problem Solving",
+    weight: "25%",
+    desc: "When something broke — what did you do?",
   },
   {
     Icon: icons.Reproducibility,
     title: "Reproducibility",
-    weight: "20%",
-    desc: "Is the work clean enough that someone else could pick it up tomorrow? A project only you can run is a liability.",
-  },
-  {
-    Icon: icons.ProblemSolving,
-    title: "Problem solving",
-    weight: "20%",
-    desc: "Did they think, or did they follow? Genuine problem solving versus tutorial assembly — the difference always shows.",
+    weight: "15%",
+    desc: "Could another engineer pick this up tomorrow?",
   },
 ];
 
@@ -103,7 +103,7 @@ export default function ScoresSection() {
               marginBottom:  "12px",
             }}
           >
-            Orcred score.
+            Four dimensions. One honest score.
           </div>
           <div
             style={{
@@ -114,7 +114,7 @@ export default function ScoresSection() {
               maxWidth:   "480px",
             }}
           >
-            Not a grade. A signal. Four dimensions that actually measure understanding.
+            Pass threshold: 60 out of 100. Everyone gets written feedback — pass or fail.
           </div>
         </motion.div>
 

@@ -9,26 +9,41 @@ const ease = [0.22, 1, 0.36, 1] as const;
 const steps = [
   {
     num: "01",
-    title: "Submit Your Project",
-    body: "Your project, a five-minute Loom walkthrough, three written build decisions, and one honest account of what broke. Everything a reviewer needs to prepare — before the call begins.",
+    title: "Submit your project",
+    body: "Your GitHub, a 5-minute Loom walkthrough, three build decisions, and one honest account of what broke. That's it.",
   },
   {
     num: "02",
-    title: "Live Socratic Review",
-    body: "40 minutes on camera with a senior engineer who has read every line of your submission. Questions are generated specifically for your work. There is no question bank and no way to coach for it.",
+    title: "We review your submission",
+    body: "We check it is complete and genuine. You are not charged until it is accepted.",
   },
   {
     num: "03",
-    title: "Your Score & Credential",
-    body: "A score out of 100 across four dimensions, written feedback on each, and — if you pass — your verified Orcred credential. Delivered within 24 hours of your review.",
+    title: "Pay Rs 1,999",
+    body: "Confirms your slot. UPI, cards, and net banking accepted.",
+  },
+  {
+    num: "04",
+    title: "Get matched to a reviewer",
+    body: "A senior engineer who specialises in your domain is assigned. Every reviewer in our founding cohort has a minimum of 5 years of hands-on production AI/ML engineering experience and is personally vetted by Orcred's founding team.",
+  },
+  {
+    num: "05",
+    title: "Your 45-minute live session",
+    body: "On camera. Real questions. Only about your project. Your reviewer already knows your code before you join.",
+  },
+  {
+    num: "06",
+    title: "Score and credential",
+    body: "Within 24 hours — your score, written feedback on every dimension, and your credential if you passed.",
   },
 ];
 
 const dimensions = [
   { label: "Technical Depth",  score: 91 },
   { label: "Communication",    score: 84 },
+  { label: "Problem Solving",  score: 79 },
   { label: "Reproducibility",  score: 88 },
-  { label: "Problem solving",  score: 79 },
 ];
 
 /* ── Credential preview card ── */
@@ -173,7 +188,7 @@ export default function ProcessSection() {
               viewport={{ once: true, amount: 0.5 }}
               transition={{ duration: 0.8, ease }}
             >
-              The verification process.
+              Start to finish — here is what happens.
             </motion.div>
 
             {/* Steps */}

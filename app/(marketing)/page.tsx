@@ -5,6 +5,7 @@ import PlatformSection from "@/components/PlatformSection";
 import ProcessSection from "@/components/ProcessSection";
 import ScoresSection from "@/components/ScoresSection";
 import ComparisonSection from "@/components/ComparisonSection";
+import FaqSection from "@/components/FaqSection";
 import CtaSection from "@/components/CtaSection";
 import ScrollProgress from "@/components/ScrollProgress";
 import { useEffect } from "react";
@@ -39,6 +40,9 @@ export default function Home() {
 
         {/* 6 · Final CTA */}
         <CtaSection />
+
+        {/* 7 · FAQ */}
+        <FaqSection />
       </main>
     </>
   );

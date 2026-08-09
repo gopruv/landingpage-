@@ -3,8 +3,10 @@
 import Link from "next/link";
 
 const primaryLinks = [
-  { label: "Contact Us",        href: "/contact"           },
-  { label: "Become a Reviewer", href: "/become-a-reviewer" },
+  { label: "FAQ",               href: "/#faq"                 },
+  { label: "Contact Us",        href: "/contact"              },
+  { label: "Become a Reviewer", href: "/become-a-reviewer"    },
+  { label: "team@orcred.com",   href: "mailto:team@orcred.com" },
 ];
 
 const legalLinks = [

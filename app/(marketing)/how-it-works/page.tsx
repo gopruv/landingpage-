@@ -29,7 +29,7 @@ const steps: Step[] = [
     intro:
       "Everything starts with your submission. Orcred verifies one specific project — something you built, something you own, something you can talk about for an hour without running out of things to say.",
     items: [
-      { label: "GitHub repository",    body: "Your actual codebase. Not a fork. Not a tutorial clone. Your own work, with a commit history that reflects genuine building over time." },
+      { label: "GitHub repository",    body: "Your actual codebase. Not a fork. Not a tutorial clone. Your own work with a commit history that reflects genuine building over time." },
       { label: "5-minute Loom walkthrough", body: "Record yourself explaining what you built and why — the architecture, the decisions. Someone who did not build the project cannot make this video. That is the point." },
       { label: "Three build decisions", body: "Written in your own words. For each: what you chose, what alternatives you considered, and why. They do not need to be long. They need to be honest and specific." },
       { label: "One thing that broke",  body: "Every real project has this moment. What went wrong, how long it took to figure out, and what the fix was. This single answer tells a reviewer more about your understanding than almost anything else." },
@@ -41,74 +41,63 @@ const steps: Step[] = [
     num: "02",
     title: "Payment",
     intro:
-      "Once your submission is accepted, payment of ₹1,999 confirms your slot in the verification queue. Payment is processed via Razorpay — UPI, cards, and net banking accepted.",
-    note: "Full refund if a reviewer cannot be assigned within 10 business days, or if your assigned reviewer cancels and cannot be rescheduled within 5 business days. 50% refund if you cancel more than 48 hours before your call. No refund after the review is completed. Full details in our Terms of Service.",
+      "Once your submission is accepted, payment of Rs 1,999 confirms your slot in the verification queue. Payment is processed via Razorpay — UPI, cards, and net banking accepted.",
+    note: "Full refund if a reviewer cannot be assigned within 10 business days, or if your assigned reviewer cancels and cannot be rescheduled within 5 business days. 50% refund if you cancel more than 48 hours before your call. No refund after the review is completed. Full details in our",
     noteLink: { label: "Terms of Service", href: "/terms" },
   },
   {
     num: "03",
-    title: "AI Build Bot",
+    title: "Reviewer Matching",
     intro:
-      "Once payment is confirmed, your AI Build Bot activates for your specific project. It knows your tech stack and the dimensions the reviewer will assess. It is your thinking partner while you prepare — not a shortcut.",
+      "Your submission is matched to a senior engineer who specialises in your specific domain — NLP, computer vision, MLOps, LLMs, RAG pipelines, or wherever your project sits. This is not random assignment.",
     items: [
-      { label: "What it does",      body: "Explains concepts, helps you think through debugging, reviews your code for readability and correctness, and suggests direction when you are stuck." },
-      { label: "What it will never do", body: "Write implementation code, complete functions, or give working solutions. It does not engage with other projects or general topics outside your submission." },
+      { label: "Reviewer standards", body: "Every Orcred reviewer has a minimum of 5 years of hands-on production AI/ML engineering experience. Every reviewer is personally vetted by Orcred's founding team and signs a confidentiality agreement before reviewing anyone." },
+      { label: "Conflict policy",    body: "Your reviewer will never be a student or recent graduate, someone without relevant specialisation in your domain, or anyone with a personal or professional connection to you." },
     ],
-    note: "You have 50 messages per submission. The credential only means something if you genuinely understand what you built. The Build Bot helps you get there.",
+    note: "Reviewer assigned within 3 to 5 business days of payment confirmation.",
   },
   {
     num: "04",
-    title: "Reviewer Matching",
-    intro:
-      "Your submission is matched to a senior engineer who specialises in your specific domain — NLP, computer vision, MLOps, LLMs, or wherever your project sits. This is not random assignment.",
-    items: [
-      { label: "Reviewer standards", body: "Every Orcred reviewer has a minimum of 5 years of industry experience in AI/ML engineering, vetted through a sample review, a calibration session with the founding team, and a signed confidentiality and quality agreement." },
-      { label: "Conflict policy",    body: "Your reviewer will never be a student or recent graduate, someone without relevant specialisation in your domain, or anyone with a personal or professional connection to you." },
-    ],
-    note: "Current target: reviewer assignment within 3–5 business days of payment confirmation.",
-  },
-  {
-    num: "05",
     title: "The Live Socratic Review",
     intro:
-      "45 to 60 minutes. Both parties on camera. Mandatory. Every question is generated specifically for your project — there is no question bank and no way to coach for it.",
+      "45 minutes. Both parties on camera. Mandatory. Every question is asked specifically for your project — there is no question bank and no way to coach for it.",
     items: [
-      { label: "Identity verification", body: "At the start of the call you will be asked to show a valid photo ID matching the name on your Orcred account. This happens before every call without exception." },
+      { label: "Identity verification", body: "At the start of the call you will be asked to show a valid government-issued photo ID matching the name on your Orcred account. This happens before every call without exception." },
       { label: "Reviewer anonymity",    body: "Your reviewer appears under an anonymous display name. Their real name, employer, and LinkedIn are never disclosed. This ensures the assessment is based entirely on your understanding and nothing else." },
-      { label: "The questions",         body: "Your reviewer has read your submission thoroughly before the call. They know your GitHub, your Loom, your build decisions. Questions probe specific edge cases, architecture choices, and your understanding of code you claim to own." },
+      { label: "The questions",         body: "Your reviewer has studied your submission thoroughly before the call. They know your GitHub, your Loom, your build decisions. Questions probe specific architectural choices, tradeoffs, failure modes, and your understanding of code you claim to own." },
       { label: "Recording",             body: "Every call is recorded with both parties' consent. Stored securely, accessible only to the Orcred founding team for quality control and dispute resolution. Deleted after 90 days unless under active dispute." },
     ],
     note: "The review is not adversarial. It is a genuine technical conversation. If you built it and you understand it — you will be fine.",
   },
   {
-    num: "06",
+    num: "05",
     title: "Score and Written Feedback",
     intro:
       "Within 24 hours of your review, your Orcred Score and written feedback are delivered to your account. Your score is out of 100 across four dimensions.",
     dimensions: [
       { label: "Technical Depth",  weight: "35%", body: "How well you understand the architecture, algorithms, and decisions inside your system. The highest weighted dimension because it is the hardest to fake." },
       { label: "Communication",    weight: "25%", body: "How clearly you explained your thinking. Can you make a complex system understandable to a smart person who is not inside your head?" },
-      { label: "Reproducibility",  weight: "20%", body: "Could someone else run and understand this project from what you have built and documented? A project only you can run is a liability." },
-      { label: "Problem solving",  weight: "20%", body: "Genuine problem solving versus tutorial following. Did you make real decisions or assemble existing pieces without understanding why?" },
+      { label: "Problem Solving",  weight: "25%", body: "Genuine problem solving versus tutorial following. Did you make real decisions or assemble existing pieces without understanding why?" },
+      { label: "Reproducibility",  weight: "15%", body: "Could someone else run and understand this project from what you have built and documented? A project only you can run is a liability." },
     ],
     scoreTable: [
-      { range: "90 – 100", meaning: "Exceptional — reviewer recommended",                         pass: true  },
-      { range: "75 – 89",  meaning: "Strong — ready for industry",                                pass: true  },
-      { range: "60 – 74",  meaning: "Passed — solid with room to grow",                           pass: true  },
-      { range: "40 – 59",  meaning: "Did not pass — partial understanding, specific gaps noted",  pass: false },
-      { range: "0 – 39",   meaning: "Did not pass — significant gaps in understanding",           pass: false },
+      { range: "90 – 100", meaning: "Exceptional",                                        pass: true  },
+      { range: "75 – 89",  meaning: "Strong — ready for industry",                        pass: true  },
+      { range: "60 – 74",  meaning: "Passed — solid with room to grow",                   pass: true  },
+      { range: "40 – 59",  meaning: "Did not pass — specific gaps noted",                 pass: false },
+      { range: "0 – 39",   meaning: "Did not pass — significant gaps in understanding",   pass: false },
     ],
-    note: "Pass threshold is 60. Every student — pass or fail — receives specific written feedback across all four dimensions. A rejection with good feedback is more valuable than a pass with no insight.",
+    note: "Pass threshold is 60. Every student — pass or fail — receives specific written feedback across all four dimensions within 24 hours. A rejection with honest feedback is more valuable than a pass with no insight.",
   },
   {
-    num: "07",
+    num: "06",
     title: "Your Credential Page",
     intro:
-      "If you pass, your Orcred credential page goes live at orcred.com/username/projectname within 24 hours of your score being delivered. It is permanent.",
+      "If you pass, your Orcred credential page goes live at orcred.com/verify/[credential-id] within 24 hours of your score being delivered. It is permanent.",
     items: [
-      { label: "What it shows", body: "Project name and description, tech stack, declared AI tools, review date, your Orcred Score overall and per dimension, and reviewer tier." },
+      { label: "What it shows", body: "Project name and description, tech stack, declared AI tools, review date, your Orcred Score overall and per dimension." },
       { label: "LinkedIn",      body: "One-click Add to LinkedIn pre-fills every certification field. Every recruiter who visits your profile sees the Orcred Verified badge with a live link to your credential page." },
-      { label: "Integrity",     body: "Every credential is cryptographically signed and server-generated. It cannot be faked or edited. The credential page lives at that URL as long as Orcred exists." },
+      { label: "Integrity",     body: "Every credential is cryptographically signed and server-generated. It cannot be faked or edited. The credential page lives at that URL permanently." },
     ],
   },
 ];
@@ -302,7 +291,7 @@ export default function HowItWorksPage() {
               Failing an Orcred review is not the end. It is specific, documented, actionable information about exactly where your understanding has gaps. You receive your full score breakdown and written feedback within 24 hours. Read it carefully. The reviewer has told you exactly what to fix.
             </p>
             <p style={{ ...bodyText }}>
-              You may resubmit after a minimum of 60 days at 30% of the current verification fee. A new reviewer. New questions. Clean slate. Many students who pass on their second attempt say the feedback from their first attempt was the most useful technical feedback they ever received.
+              You can resubmit at any time — no waiting period. Pay the full fee again. New reviewer. New questions. Clean slate. Many students who pass on their second attempt say the feedback from their first attempt was the most useful technical feedback they ever received.
             </p>
           </div>
         </motion.div>
@@ -324,11 +313,11 @@ export default function HowItWorksPage() {
           </div>
 
           <div style={{ fontSize: "clamp(22px, 2.8vw, 38px)", fontWeight: 400, letterSpacing: "-0.02em", lineHeight: 1.2, color: "#0f0d0c", maxWidth: "640px", marginBottom: 20 }}>
-            Orcred has a 40–60% pass rate. That number is not going to change.
+            The credential means something because not everyone gets it.
           </div>
 
           <p style={{ ...bodyText, maxWidth: "560px", marginBottom: 20 }}>
-            That pass rate is the only reason the credential means anything. Every company that sees Orcred Verified on a profile knows that between 40 and 60 percent of people who tried did not get it. That is what makes the ones who did worth paying attention to.
+            Every company that sees Orcred Verified on a profile knows that a real senior engineer reviewed this person&apos;s actual work and confirmed they understand what they built. That is what makes it worth carrying.
           </p>
 
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navLinks = [
-  { label: "Standard", href: "#story"      },
+  { label: "How It Works", href: "#story"      },
   { label: "Scoring",  href: "#scores"     },
   { label: "Process",  href: "#process"    },
   { label: "Compare",  href: "#comparison" },
@@ -113,7 +113,7 @@ export default function Navbar() {
             onMouseEnter={e => ((e.currentTarget as HTMLElement).style.opacity = "0.8")}
             onMouseLeave={e => ((e.currentTarget as HTMLElement).style.opacity = "1")}
           >
-            Apply Now
+            Join the Waitlist
           </Link>
         </nav>
 

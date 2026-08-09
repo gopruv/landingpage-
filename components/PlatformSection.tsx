@@ -8,18 +8,18 @@ const ease = [0.22, 1, 0.36, 1] as const;
 const panels = [
   {
     num: "01", eyebrow: "The Problem",
-    headline: "Everyone has a project.",
-    body: "Someone spent six months building something real. Someone else spent a weekend prompting ChatGPT. Right now their portfolios look identical — and that gap is costing real builders their careers.",
+    headline: "Everyone has a project. Not everyone built it.",
+    body: "Your GitHub looks the same as someone who spent a weekend prompting ChatGPT. Recruiters cannot tell the difference. The engineer from a tier 2 college who spent six months building something real loses to someone who barely touched their project. Orcred fixes that.",
   },
   {
     num: "02", eyebrow: "The Session",
-    headline: "40 minutes. One engineer. Your work.",
-    body: "Not a quiz. Not a take-home test. A real conversation about the project you built, every decision you made, every tradeoff you chose. The ones who built it for real talk about it differently.",
+    headline: "One conversation changes the signal.",
+    body: "A senior engineer reads your code before you join the call. 45 minutes of live questions — only about your specific project. No question bank. No way to fake it.",
   },
   {
     num: "03", eyebrow: "The Proof",
     headline: "Now there's proof.",
-    body: "An Orcred Score. A verified credential backed by a senior engineer's sign-off. Something you carry into any room — a real engineer reviewed this work. It passed.",
+    body: "Pass and you get a credential within 24 hours. Don't pass and you get honest feedback on exactly what to fix.",
   },
 ];
 
@@ -71,7 +71,7 @@ function ClockVisual() {
         })}
       </svg>
       <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ fontSize: 64, fontWeight: 700, letterSpacing: "-0.05em", lineHeight: 1, color: "rgba(255,255,255,0.96)" }}>40</div>
+        <div style={{ fontSize: 64, fontWeight: 700, letterSpacing: "-0.05em", lineHeight: 1, color: "rgba(255,255,255,0.96)" }}>45</div>
         <div style={{ fontSize: 10, fontWeight: 500, letterSpacing: "0.3em", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", marginTop: 6 }}>minutes</div>
       </div>
     </div>
@@ -83,8 +83,8 @@ function ScoreVisual() {
   const bars = [
     { label: "Technical Depth", w: "91%" },
     { label: "Communication",   w: "84%" },
+    { label: "Problem Solving", w: "79%" },
     { label: "Reproducibility", w: "88%" },
-    { label: "Problem solving", w: "79%" },
   ];
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16, width: 260 }}>

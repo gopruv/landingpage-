@@ -52,7 +52,7 @@ export default function HeroSection({ onApply: _ }: HeroProps) {
             transition={{ duration: 0.9, delay: 0.1, ease }}
           >
             The verification standard<br />
-            for AI/ML engineers.
+            for AI/ML engineers in India.
           </motion.div>
 
           {/* Right: body */}
@@ -67,9 +67,9 @@ export default function HeroSection({ onApply: _ }: HeroProps) {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.9, delay: 0.25, ease }}
           >
-            A live 45-minute technical review with a senior engineer who has read your code and watched your walkthrough. One score. One credential. Delivered in 24 hours.
+            Submit your project. Get on a live 45-minute call with a senior engineer who has already read your code. If you understand what you built — you get a credential that proves it.
             <div style={{ marginTop: 20, fontStyle: "italic", color: "rgba(15,13,12,0.38)", fontSize: "clamp(12px, 1vw, 14px)" }}>
-              The standard does not move.
+              Rs 1,999 · No subscription · No hidden fees
             </div>
           </motion.div>
 
@@ -89,7 +89,7 @@ export default function HeroSection({ onApply: _ }: HeroProps) {
             onMouseEnter={e => ((e.currentTarget as HTMLElement).style.opacity = "0.8")}
             onMouseLeave={e => ((e.currentTarget as HTMLElement).style.opacity = "1")}
           >
-            Apply for Verification
+            Join the Waitlist
           </Link>
           <Link
             href="/how-it-works"
@@ -101,6 +101,17 @@ export default function HeroSection({ onApply: _ }: HeroProps) {
             How it works
             <span style={{ letterSpacing: 0, color: "inherit" }}>→</span>
           </Link>
+          <span
+            className="inline-flex items-center gap-2.5 pl-2 font-label-sm uppercase tracking-[0.2em] text-[11px]"
+            style={{ color: "#eb4511", fontWeight: 700 }}
+          >
+            <motion.span
+              style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: "#eb4511", flexShrink: 0 }}
+              animate={{ opacity: [1, 0.2, 1] }}
+              transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+            />
+            Coming soon
+          </span>
         </motion.div>
 
         {/* Stats strip */}
@@ -111,9 +122,9 @@ export default function HeroSection({ onApply: _ }: HeroProps) {
           transition={{ duration: 0.8, delay: 0.52 }}
         >
           {[
-            { value: "40–60%", label: "Pass rate" },
-            { value: "40 min",  label: "Live review" },
-            { value: "24 hrs",  label: "Turnaround" },
+            { value: "45 min",   label: "Live review" },
+            { value: "Rs 1,999", label: "Per review" },
+            { value: "24 hrs",   label: "Result" },
           ].map((s, i, arr) => (
             <div key={i} style={{ display: "flex", alignItems: "center" }}>
               <div style={{ paddingRight: 20 }}>

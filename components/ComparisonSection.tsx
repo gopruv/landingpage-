@@ -9,25 +9,25 @@ const rows = [
   {
     platform: "GitHub",
     proves:   "You pushed code.",
-    misses:   "Whether you understand any of it.",
+    misses:   "Whether you understand it.",
     highlight: false,
   },
   {
     platform: "LeetCode",
-    proves:   "You memorised patterns.",
-    misses:   "Whether you can engineer a real system.",
+    proves:   "You solve puzzles.",
+    misses:   "Whether you can build systems.",
     highlight: false,
   },
   {
     platform: "Certificates",
-    proves:   "You finished the course.",
-    misses:   "Whether you can apply any of it.",
+    proves:   "You finished a course.",
+    misses:   "Whether you can apply it.",
     highlight: false,
   },
   {
     platform: "Orcred",
     proves:   "You understand what you built.",
-    misses:   "Nothing. The gap is closed.",
+    misses:   "Nothing.",
     highlight: true,
   },
 ];
@@ -61,7 +61,7 @@ export default function ComparisonSection() {
               color:         "#0f0d0c",
             }}
           >
-            How Orcred compares to other credentials
+            Every credential leaves one question unanswered.
           </div>
         </motion.div>
 
