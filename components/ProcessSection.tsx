@@ -14,26 +14,21 @@ const steps = [
   },
   {
     num: "02",
-    title: "Pay Rs 1,999",
-    body: "Payment is made at the time of registration and confirms your slot. UPI, cards, and net banking accepted.",
-  },
-  {
-    num: "03",
     title: "We review your submission",
     body: "We check it is complete and genuine before your reviewer is assigned.",
   },
   {
-    num: "04",
+    num: "03",
     title: "Get matched to a reviewer",
     body: "A senior engineer who specialises in your domain is assigned. Every reviewer in our founding cohort has a minimum of 5 years of hands-on production AI/ML engineering experience and is personally vetted by Orcred's founding team.",
   },
   {
-    num: "05",
+    num: "04",
     title: "Your 45-minute live session",
     body: "On camera. Real questions. Only about your project. Your reviewer already knows your code before you join.",
   },
   {
-    num: "06",
+    num: "05",
     title: "Score and credential",
     body: "Within 24 hours — your score, written feedback on every dimension, and your credential if you passed.",
   },
