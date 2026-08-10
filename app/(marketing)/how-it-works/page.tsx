@@ -35,13 +35,13 @@ const steps: Step[] = [
       { label: "One thing that broke",  body: "Every real project has this moment. What went wrong, how long it took to figure out, and what the fix was. This single answer tells a reviewer more about your understanding than almost anything else." },
       { label: "AI tools declaration",  body: "Did you use Cursor, Claude, Copilot, or anything else? Declare it. Orcred is not anti-AI. The question is not whether you used AI — it is whether you understand what it built for you." },
     ],
-    note: "Incomplete submissions are returned with specific notes on what is missing. You will not be charged until your submission is accepted.",
+    note: "Payment is made at the time of registration, together with your submission. Incomplete submissions are returned with specific notes on what is missing.",
   },
   {
     num: "02",
     title: "Payment",
     intro:
-      "Once your submission is accepted, payment of Rs 1,999 confirms your slot in the verification queue. Payment is processed via Razorpay — UPI, cards, and net banking accepted.",
+      "Payment of Rs 1,999 is made at the time of registration and confirms your slot in the verification queue. You pay when you register — not days later. Payment is processed via Razorpay — UPI, cards, and net banking accepted.",
     note: "Full refund if a reviewer cannot be assigned within 10 business days, or if your assigned reviewer cancels and cannot be rescheduled within 5 business days. 50% refund if you cancel more than 48 hours before your call. No refund after the review is completed. Full details in our",
     noteLink: { label: "Terms of Service", href: "/terms" },
   },

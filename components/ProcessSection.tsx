@@ -14,13 +14,13 @@ const steps = [
   },
   {
     num: "02",
-    title: "We review your submission",
-    body: "We check it is complete and genuine. You are not charged until it is accepted.",
+    title: "Pay Rs 1,999",
+    body: "Payment is made at the time of registration and confirms your slot. UPI, cards, and net banking accepted.",
   },
   {
     num: "03",
-    title: "Pay Rs 1,999",
-    body: "Confirms your slot. UPI, cards, and net banking accepted.",
+    title: "We review your submission",
+    body: "We check it is complete and genuine before your reviewer is assigned.",
   },
   {
     num: "04",

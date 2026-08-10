@@ -37,7 +37,7 @@ const sections = [
   {
     title: "Payment and Refund Policy",
     body: [
-      "The verification fee is Rs 1,999 per session + GST. Payment is required to confirm your slot in the verification queue. Payment is processed via Razorpay.",
+      "The verification fee is Rs 1,999 per session + GST. Payment is required at the time of registration and confirms your slot in the verification queue. Payment is processed via Razorpay.",
       "Refund policy: Full refund if a reviewer cannot be assigned within 10 business days of payment. Full refund if your assigned reviewer cancels and cannot be rescheduled within 5 business days. 50% refund if you cancel more than 48 hours before your scheduled session. No refund after the session is completed — pass or fail.",
     ],
   },
