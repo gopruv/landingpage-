@@ -1,15 +1,12 @@
 import { ReactNode } from 'react';
-import LegacyChrome from '@/components/LegacyChrome';
 
 /**
- * Redesigned marketing pages bind themselves into <DocFrame>, which carries its
- * own index rail and colophon — each document has a different contents list, so
- * the shell cannot live here. LegacyChrome keeps the original Navbar/Footer on
- * the pages that have not been redesigned yet.
+ * Every marketing page now binds itself into <Frame>, which carries the header
+ * and footer. There is nothing left for this layout to add.
  *
  * CookieBanner is deliberately absent: the root layout already mounts it, and
  * rendering it here too put two banners on every marketing page.
  */
 export default function MarketingLayout({ children }: { children: ReactNode }) {
-  return <LegacyChrome>{children}</LegacyChrome>;
+  return <>{children}</>;
 }
