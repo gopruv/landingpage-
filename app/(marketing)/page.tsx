@@ -1,49 +1,39 @@
 "use client";
 
-import HeroSection from "@/components/HeroSection";
-import PlatformSection from "@/components/PlatformSection";
-import ProcessSection from "@/components/ProcessSection";
-import ScoresSection from "@/components/ScoresSection";
-import ComparisonSection from "@/components/ComparisonSection";
-import FaqSection from "@/components/FaqSection";
-import CtaSection from "@/components/CtaSection";
-import ScrollProgress from "@/components/ScrollProgress";
 import { useEffect } from "react";
 
+import Frame from "@/components/orx/Frame";
+import Hero from "@/components/orx/home/Hero";
+import Gap from "@/components/orx/home/Gap";
+import Standard from "@/components/orx/home/Standard";
+import Procedure from "@/components/orx/home/Procedure";
+import Compare from "@/components/orx/home/Compare";
+import Questions from "@/components/orx/home/Questions";
+import Close from "@/components/orx/home/Close";
+
 export default function Home() {
+  // Arriving with /#standard from another page: Next restores scroll before the
+  // blocks have laid out, so nudge it once the first frame is painted.
   useEffect(() => {
     const hash = window.location.hash;
     if (!hash) return;
     const el = document.querySelector(hash);
-    if (el) el.scrollIntoView({ behavior: "smooth" });
+    if (!el) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    requestAnimationFrame(() =>
+      el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" }),
+    );
   }, []);
 
   return (
-    <>
-      <ScrollProgress />
-
-      <main>
-        {/* 1 · Brand statement — the hero */}
-        <HeroSection onApply={() => {}} />
-
-        {/* 2 · The problem / the cost / the fix */}
-        <PlatformSection />
-
-        {/* 3 · The Score — formal assessment framework */}
-        <ScoresSection />
-
-        {/* 4 · Process — how the review works */}
-        <ProcessSection />
-
-        {/* 5 · Why Orcred — comparison vs alternatives */}
-        <ComparisonSection />
-
-        {/* 6 · Final CTA */}
-        <CtaSection />
-
-        {/* 7 · FAQ */}
-        <FaqSection />
-      </main>
-    </>
+    <Frame>
+      <Hero />
+      <Gap />
+      <Standard />
+      <Procedure />
+      <Compare />
+      <Questions />
+      <Close />
+    </Frame>
   );
 }
