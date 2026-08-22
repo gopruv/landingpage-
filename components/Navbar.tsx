@@ -4,10 +4,11 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+/* Targets follow the clause ids on the redesigned home document. */
 const navLinks = [
-  { label: "How It Works", href: "#story"      },
-  { label: "Scoring",  href: "#scores"     },
-  { label: "Process",  href: "#process"    },
+  { label: "The Gap",  href: "#gap"        },
+  { label: "Scoring",  href: "#standard"   },
+  { label: "Process",  href: "#procedure"  },
   { label: "Compare",  href: "#comparison" },
 ];
 

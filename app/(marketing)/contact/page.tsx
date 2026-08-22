@@ -1,143 +1,152 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import Breadcrumb from "@/components/Breadcrumb";
+import { AnimatePresence, motion } from "framer-motion";
+import Frame from "@/components/orx/Frame";
+import { Block, Done, Field, Head, Submit } from "@/components/orx/Sheet";
+import { Arrow, EASE, L, Rise, T } from "@/components/orx/kit";
 
-const ease = [0.22, 1, 0.36, 1] as const;
-
-const fields = [
-  { id: "name",    label: "Full Name",  placeholder: "Your name",        type: "text"     as const, required: true  },
-  { id: "email",   label: "Email",      placeholder: "you@example.com",  type: "email"    as const, required: true  },
-  { id: "message", label: "Message",    placeholder: "How can we help?", type: "textarea" as const, required: true  },
+const DIRECT = [
+  { k: "General enquiries", v: "team@orcred.com" },
+  { k: "Privacy and data", v: "contact@orcred.com" },
 ];
 
-function Field({ def, value, onChange, index }: {
-  def: typeof fields[0]; value: string; onChange: (v: string) => void; index: number;
-}) {
-  const [focused, setFocused] = useState(false);
-  const base: React.CSSProperties = {
-    background: "transparent", color: "#0f0d0c", outline: "none", width: "100%",
-    fontWeight: 400, fontSize: "14px", lineHeight: 1.75, paddingBottom: "10px", resize: "none",
-  };
-  return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.65, delay: index * 0.07, ease }}>
-      <label htmlFor={def.id} style={{ fontSize: 9, fontWeight: 600, letterSpacing: "0.3em", textTransform: "uppercase" as const, color: focused ? "#eb4511" : "rgba(15,13,12,0.4)", transition: "color 0.25s ease", display: "block", marginBottom: 8 }}>
-        {def.label}{def.required && <span style={{ color: "#eb4511", marginLeft: "4px" }}>*</span>}
-      </label>
-      {def.type === "textarea" ? (
-        <textarea id={def.id} rows={4} value={value} placeholder={def.placeholder}
-          onChange={e => onChange(e.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-          style={base} className="block placeholder:text-[rgba(15,13,12,0.25)]" />
-      ) : (
-        <input id={def.id} type={def.type} value={value} placeholder={def.placeholder}
-          onChange={e => onChange(e.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-          style={{ ...base, display: "block" }} className="placeholder:text-[rgba(15,13,12,0.25)]" />
-      )}
-      <div className="w-full h-px mt-1 transition-colors duration-300"
-        style={{ background: focused ? "#eb4511" : "rgba(15,13,12,0.12)" }} />
-    </motion.div>
-  );
-}
-
-function Success() {
-  return (
-    <motion.div key="success" className="flex flex-col items-start gap-8 py-4"
-      initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, ease }}>
-      <div className="relative w-[56px] h-[56px]">
-        <div className="absolute inset-0 rounded-full border" style={{ borderColor: "rgba(235,69,17,0.3)" }} />
-        <div className="absolute inset-[7px] rounded-full border" style={{ borderColor: "rgba(235,69,17,0.15)" }} />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-[11px] h-[11px] rounded-full" style={{ background: "#eb4511", boxShadow: "0 0 14px 4px rgba(235,69,17,0.25)" }} />
-        </div>
-      </div>
-      <div>
-        <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: "0.3em", textTransform: "uppercase" as const, color: "#eb4511", marginBottom: 16 }}>Received</div>
-        <div style={{ fontSize: "clamp(22px, 2.8vw, 38px)", fontWeight: 400, letterSpacing: "-0.02em", lineHeight: 1.1, color: "#0f0d0c" }}>
-          We&apos;ll be in touch shortly.
-        </div>
-      </div>
-      <div className="w-8 h-px" style={{ background: "#eb4511", opacity: 0.7 }} />
-      <div style={{ fontSize: 14, fontWeight: 400, lineHeight: 1.8, color: "rgba(15,13,12,0.55)", maxWidth: "320px" }}>
-        We read every message personally and will get back to you soon.
-      </div>
-    </motion.div>
-  );
-}
+const ELSEWHERE = [
+  { label: "Questions we answer most", href: "/#questions" },
+  { label: "Apply to review for us", href: "/become-a-reviewer" },
+  { label: "Join the waitlist", href: "/join-waitlist" },
+];
 
 export default function ContactPage() {
-  const [values, setValues]       = useState({ name: "", email: "", message: "" });
-  const [submitting, setSubmitting] = useState(false);
-  const [sent, setSent]           = useState(false);
-  const [error, setError]         = useState<string | null>(null);
+  const [v, setV] = useState({ name: "", email: "", message: "" });
+  const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const set = (k: keyof typeof v) => (val: string) => setV((p) => ({ ...p, [k]: val }));
+  const ok = Boolean(v.name.trim() && v.email.trim() && v.message.trim());
+
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitting(true); setError(null);
+    if (!ok) return;
+    setBusy(true);
+    setError(null);
     try {
       const res = await fetch("/api/contact", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "contact", ...values }),
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "contact", ...v }),
       });
       if (!res.ok) throw new Error();
       setSent(true);
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError("Something went wrong. Please try again, or email team@orcred.com.");
     } finally {
-      setSubmitting(false);
+      setBusy(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "var(--bg-page)" }}>
+    <Frame>
+      <Head
+        eyebrow="Contact"
+        title={["Get in touch."]}
+        lede="Every message is read by a founder, and we reply to all of them."
+        meta={["Usually within 1–2 days", "No support queue"]}
+      />
 
-      <Breadcrumb items={[{ label: "Home", href: "/" }, { label: "Contact" }]} />
+      <Block id="enquiry">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-y-14 lg:gap-x-16">
+          {/* Form */}
+          <div className="lg:col-span-7">
+            <AnimatePresence mode="wait">
+              {sent ? (
+                <Done
+                  key="done"
+                  title={["Message received."]}
+                  body="We read every message personally. Expect a reply from a founder, not a queue."
+                >
+                  <Rise delay={0.4} className="mt-9 flex flex-wrap gap-x-8 gap-y-4">
+                    <Arrow href="/">Back to home</Arrow>
+                    <Arrow href="/join-waitlist">Join the waitlist</Arrow>
+                  </Rise>
+                </Done>
+              ) : (
+                <motion.form
+                  key="form"
+                  onSubmit={submit}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3, ease: EASE }}
+                  style={{ maxWidth: 560 }}
+                >
+                  <Field id="name" label="Your name" required>
+                    <input
+                      id="name" className="orx-input" autoComplete="name" required
+                      value={v.name} onChange={(e) => set("name")(e.target.value)}
+                      placeholder="Priya Sharma"
+                    />
+                  </Field>
 
-      <div className="relative z-10 flex-1 flex flex-col max-w-[760px] mx-auto w-full px-8 sm:px-12 lg:px-16 py-12 sm:py-16 lg:py-20">
+                  <Field id="email" label="Email" required>
+                    <input
+                      id="email" type="email" className="orx-input" autoComplete="email" required
+                      value={v.email} onChange={(e) => set("email")(e.target.value)}
+                      placeholder="you@example.com"
+                    />
+                  </Field>
 
-        {/* Page title */}
-        <motion.div className="mb-14" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, ease }}>
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-6 h-px" style={{ backgroundColor: "#eb4511" }} />
-            <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.3em", textTransform: "uppercase", color: "#eb4511" }}>
-              Contact
-            </span>
+                  <Field
+                    id="message" label="Message" required
+                    hint="The more specific you are, the more useful our reply will be."
+                  >
+                    <textarea
+                      id="message" rows={6} className="orx-input" required
+                      value={v.message} onChange={(e) => set("message")(e.target.value)}
+                      placeholder="What would you like to know?"
+                    />
+                  </Field>
+
+                  <Submit label="Send message" busy={busy} disabled={!ok} error={error} />
+                </motion.form>
+              )}
+            </AnimatePresence>
           </div>
-          <div style={{ fontSize: "clamp(22px, 2.8vw, 38px)", fontWeight: 400, letterSpacing: "-0.02em", lineHeight: 1.1, color: "#0f0d0c", marginBottom: 12 }}>
-            Contact Us
-          </div>
-          <div style={{ fontSize: "clamp(14px, 1.2vw, 16px)", fontWeight: 400, lineHeight: 1.7, color: "rgba(15,13,12,0.45)", fontStyle: "italic" }}>
-            Every message is read by a founder.
-          </div>
-        </motion.div>
 
-        <div className="w-full h-px mb-12" style={{ background: "rgba(15,13,12,0.1)" }} />
+          {/* Direct */}
+          <div className="lg:col-span-5">
+            <div className="orx-card p-7 sm:p-8">
+              <L style={{ display: "block", marginBottom: 20 }}>Or email us directly</L>
 
-        <AnimatePresence mode="wait">
-          {sent ? <Success key="success" /> : (
-            <motion.form key="form" onSubmit={handleSubmit} className="space-y-9 max-w-xl"
-              initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.7, ease }}>
-              {fields.map((f, i) => (
-                <Field key={f.id} def={f} value={values[f.id as keyof typeof values]}
-                  onChange={v => setValues(prev => ({ ...prev, [f.id]: v }))} index={i} />
-              ))}
-              <div className="pt-4">
-                <motion.button type="submit" disabled={submitting}
-                  className="relative uppercase text-[11px] py-2"
-                  style={{ fontWeight: 500, letterSpacing: "0.2em", color: submitting ? "rgba(15,13,12,0.35)" : "#0f0d0c", background: "transparent" }}
-                  initial="rest" whileHover={submitting ? "rest" : "hover"} animate="rest" whileTap={{ scale: 0.98 }}>
-                  {submitting ? "Sending…" : "Send Message"}
-                  <motion.span className="absolute bottom-0 left-0 h-[1px]" style={{ background: "#eb4511" }}
-                    variants={{ rest: { width: "0%", transition: { duration: 0.3, ease: "easeOut" } }, hover: { width: "100%", transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } } }} />
-                </motion.button>
-                {error && <div className="mt-3 text-[9px] tracking-[0.2em]" style={{ color: "#eb4511" }}>{error}</div>}
-                <div className="mt-4 uppercase text-[8px] tracking-[0.28em]" style={{ color: "rgba(15,13,12,0.35)" }}>Fields marked * are required</div>
+              <div className="orx-rows">
+                {DIRECT.map((row, i) => (
+                  <div key={row.k} style={{ paddingTop: i === 0 ? 0 : 18, paddingBottom: 18 }}>
+                    <div style={{ ...T.fine, marginBottom: 6 }}>{row.k}</div>
+                    <a href={`mailto:${row.v}`} className="orx-ref" style={{ ...T.title, fontSize: 19 }}>
+                      {row.v}
+                    </a>
+                  </div>
+                ))}
               </div>
-            </motion.form>
-          )}
-        </AnimatePresence>
+            </div>
 
-      </div>
-    </div>
+            <div className="mt-8">
+              <L style={{ display: "block", marginBottom: 18 }}>You might also want</L>
+              <div className="flex flex-col items-start gap-5">
+                {ELSEWHERE.map((l) => (
+                  <Arrow key={l.href} href={l.href}>{l.label}</Arrow>
+                ))}
+              </div>
+            </div>
+
+            <p style={{ ...T.fine, marginTop: 32 }}>
+              Your information is handled under our{" "}
+              <a href="/privacy" className="orx-ref">Privacy Policy</a>.
+            </p>
+          </div>
+        </div>
+      </Block>
+    </Frame>
   );
 }
