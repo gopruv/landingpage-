@@ -123,7 +123,7 @@ export default function Standard() {
                       <Tally to={c.w} dur={1.2} delay={0.2 + i * 0.08} suffix="%" />
                     </span>
                   </div>
-                  <Meter value={c.w} max={35} delay={0.3 + i * 0.08} height={5} />
+                  <Meter value={c.w} delay={0.3 + i * 0.08} height={5} />
                 </div>
               </Rise>
             ))}

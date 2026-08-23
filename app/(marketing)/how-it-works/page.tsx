@@ -277,7 +277,7 @@ export default function HowItWorksPage() {
                               <span style={{ ...T.title, fontSize: 17 }}>{d.label}</span>
                               <span style={{ ...T.fig, fontSize: 19 }}>{d.weight}%</span>
                             </div>
-                            <Meter value={d.weight} max={35} delay={0.1 + j * 0.08} height={5} />
+                            <Meter value={d.weight} delay={0.1 + j * 0.08} height={5} />
                             <p style={{ ...T.body, margin: 0, marginTop: 12 }}>{d.body}</p>
                           </div>
                         ))}
