@@ -126,6 +126,62 @@ export function Dot({ c = "var(--or)" }: { c?: string }) {
   );
 }
 
+/**
+ * The Orcred mark.
+ *
+ * One lockup, used at every size — site chrome, badge, certificate. The dot
+ * and the gap are derived from the wordmark's size through fixed ratios, so the
+ * proportions hold wherever it lands and cannot drift apart between surfaces
+ * again. The dot is drawn edge-to-edge in its viewBox, so `dot: 1` means the
+ * orange circle is exactly as tall as the type is large.
+ *
+ * `u` converts a design-unit number into whatever unit the surface measures in:
+ * pixels in the page chrome, container-relative lengths inside the badge, a
+ * scaled value on the certificate. Being an SVG circle, it is resolution-free —
+ * it cannot pixelate at any size.
+ *
+ * `track` is deliberately looser than the display headings use: tight negative
+ * tracking that reads well at 19px turns cramped once the wordmark is set at
+ * 27px, where the letters start colliding rather than just closing up.
+ */
+export const MARK = { dot: 1, gap: 0.3, track: -0.018 } as const;
+
+export function Mark({
+  size = 23,
+  u = (n: number) => n,
+  color = "var(--ink)",
+}: {
+  size?: number;
+  u?: (n: number) => number | string;
+  color?: string;
+}) {
+  const d = u(size * MARK.dot);
+  return (
+    <span className="inline-flex items-center" style={{ gap: u(size * MARK.gap) }}>
+      <svg
+        viewBox="0 0 40 40"
+        fill="none"
+        aria-hidden
+        style={{ width: d, height: d, flexShrink: 0, display: "block" }}
+      >
+        <circle cx="20" cy="20" r="20" fill="#eb4511" />
+      </svg>
+      <span
+        style={{
+          fontFamily: "'Inter Tight', sans-serif",
+          fontWeight: 600,
+          fontSize: u(size),
+          letterSpacing: `${MARK.track}em`,
+          lineHeight: 1,
+          color,
+        }}
+      >
+        Orcred
+      </span>
+    </span>
+  );
+}
+
 export function Eyebrow({ children, c = "var(--or)" }: { children: ReactNode; c?: string }) {
   return (
     <span className="inline-flex items-center gap-2.5">

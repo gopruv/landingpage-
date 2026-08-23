@@ -19,7 +19,7 @@
  */
 
 import { motion, useReducedMotion } from "framer-motion";
-import { EASE, T } from "./kit";
+import { EASE, Mark, T } from "./kit";
 
 /** The width the proportions below were drawn at. */
 const BASE = 260;
@@ -65,22 +65,7 @@ export default function Badge({
           className="flex items-center justify-between gap-2"
           style={{ height: q(52), paddingLeft: pad, paddingRight: pad, borderBottom: "1px solid var(--line)" }}
         >
-          <span className="flex items-center" style={{ gap: q(9) }}>
-            <svg style={{ width: q(15), height: q(15), flexShrink: 0 }} viewBox="0 0 42 42" fill="none" aria-hidden>
-              <circle cx="21" cy="21" r="20" fill="#eb4511" />
-            </svg>
-            <span
-              style={{
-                fontFamily: "'Inter Tight', sans-serif",
-                fontWeight: 600,
-                fontSize: q(15.5),
-                letterSpacing: "-0.035em",
-                color: "var(--ink)",
-              }}
-            >
-              Orcred
-            </span>
-          </span>
+          <Mark size={18} u={q} />
 
           <span
             className="inline-flex items-center flex-shrink-0"

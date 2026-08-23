@@ -19,7 +19,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
-import { EASE, T } from "./kit";
+import { EASE, Mark, T } from "./kit";
 
 /** A drawn flourish — a specimen signature, not anyone's real mark. */
 function Flourish({ w }: { w: number }) {
@@ -97,22 +97,7 @@ export default function Certificate({
         <div style={{ padding: pad, height: `calc(100% - ${4 * u}px)`, display: "flex", flexDirection: "column" }}>
           {/* Issuer + reference */}
           <div className="flex items-center justify-between gap-4">
-            <span className="inline-flex items-center" style={{ gap: 9 * u }}>
-              <svg width={18 * u} height={18 * u} viewBox="0 0 42 42" fill="none" aria-hidden>
-                <circle cx="21" cy="21" r="20" fill="#eb4511" />
-              </svg>
-              <span
-                style={{
-                  fontFamily: "'Inter Tight', sans-serif",
-                  fontWeight: 600,
-                  fontSize: 19 * u,
-                  letterSpacing: "-0.035em",
-                  color: "var(--ink)",
-                }}
-              >
-                Orcred
-              </span>
-            </span>
+            <Mark size={23} u={(n) => n * u} />
 
             <span
               className="orx-num"

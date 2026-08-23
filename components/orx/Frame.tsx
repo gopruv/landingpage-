@@ -21,7 +21,7 @@ import {
   useTransform,
 } from "framer-motion";
 import { useEffect, useState, type ReactNode } from "react";
-import { Btn, EASE, L, SHELL, T } from "./kit";
+import { Btn, EASE, L, MARK, SHELL, T } from "./kit";
 
 const NAV = [
   { label: "How it works", href: "/how-it-works" },
@@ -70,7 +70,7 @@ const FOOT = [
  * The track is animated in `fr` through a motion template — that avoids
  * measuring the text, so it stays correct at any font size or after a reflow.
  */
-function Wordmark({ size = 19, collapse = false }: { size?: number; collapse?: boolean }) {
+function Wordmark({ size = 27, collapse = false }: { size?: number; collapse?: boolean }) {
   const reduce = useReducedMotion();
   const { scrollY } = useScroll();
   const on = collapse && !reduce;
@@ -82,19 +82,24 @@ function Wordmark({ size = 19, collapse = false }: { size?: number; collapse?: b
   const x = useTransform(scrollY, RANGE, [0, -14]);
   const b = useTransform(scrollY, RANGE, [0, 3.5]);
   const filter = useMotionTemplate`blur(${b}px)`;
-  const gap = useTransform(scrollY, RANGE, [10, 0]);
+  const gap = useTransform(scrollY, RANGE, [size * MARK.gap, 0]);
 
   return (
     <Link href="/" className="flex items-center" aria-label="Orcred — home">
-      <svg width="20" height="20" viewBox="0 0 42 42" fill="none" aria-hidden style={{ flexShrink: 0 }}>
-        <circle cx="21" cy="21" r="20" fill="#eb4511" />
+      <svg
+        viewBox="0 0 40 40"
+        fill="none"
+        aria-hidden
+        style={{ width: size * MARK.dot, height: size * MARK.dot, flexShrink: 0, display: "block" }}
+      >
+        <circle cx="20" cy="20" r="20" fill="#eb4511" />
       </svg>
 
       <motion.span
         style={{
           display: "grid",
           gridTemplateColumns: on ? cols : "1fr",
-          marginLeft: on ? gap : 10,
+          marginLeft: on ? gap : size * MARK.gap,
           overflow: "hidden",
         }}
       >
@@ -104,7 +109,7 @@ function Wordmark({ size = 19, collapse = false }: { size?: number; collapse?: b
             fontFamily: "'Inter Tight', sans-serif",
             fontWeight: 600,
             fontSize: size,
-            letterSpacing: "-0.035em",
+            letterSpacing: `${MARK.track}em`,
             color: "var(--ink)",
             lineHeight: 1,
             whiteSpace: "nowrap",
@@ -286,7 +291,7 @@ export default function Frame({ children }: { children: ReactNode }) {
         <div className={`${SHELL} pt-16 pb-10`}>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-y-12 lg:gap-x-10">
             <div className="lg:col-span-5">
-              <Wordmark size={21} />
+              <Wordmark />
               <p style={{ ...T.body, marginTop: 16, maxWidth: 320 }}>
                 The verification standard for AI/ML engineers in India.
               </p>

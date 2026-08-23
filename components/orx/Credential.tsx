@@ -10,7 +10,7 @@
 
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import { useRef } from "react";
-import { EASE, L, Meter, T, Tally } from "./kit";
+import { EASE, L, Mark, Meter, T, Tally } from "./kit";
 
 const DIMENSIONS = [
   { label: "Technical depth", score: 91 },
@@ -32,22 +32,7 @@ export default function Credential({ caption = true }: { caption?: boolean }) {
           className="flex items-center justify-between gap-4 px-6"
           style={{ height: 56, borderBottom: "1px solid var(--line)" }}
         >
-          <div className="flex items-center gap-2.5">
-            <svg width="15" height="15" viewBox="0 0 42 42" fill="none" aria-hidden>
-              <circle cx="21" cy="21" r="20" fill="#eb4511" />
-            </svg>
-            <span
-              style={{
-                fontFamily: "'Inter Tight', sans-serif",
-                fontWeight: 600,
-                fontSize: 16,
-                letterSpacing: "-0.035em",
-                color: "var(--ink)",
-              }}
-            >
-              Orcred
-            </span>
-          </div>
+          <Mark size={19} />
 
           <span
             className="inline-flex items-center gap-2"
