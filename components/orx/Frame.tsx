@@ -14,9 +14,11 @@ import { usePathname } from "next/navigation";
 import {
   AnimatePresence,
   motion,
+  useMotionTemplate,
   useMotionValueEvent,
   useReducedMotion,
   useScroll,
+  useTransform,
 } from "framer-motion";
 import { useEffect, useState, type ReactNode } from "react";
 import { Btn, EASE, L, SHELL, T } from "./kit";
@@ -56,24 +58,64 @@ const FOOT = [
   },
 ];
 
-function Wordmark({ size = 19 }: { size?: number }) {
+/**
+ * The mark.
+ *
+ * With `collapse`, the word retracts into the dot as the page scrolls: its grid
+ * track closes to zero while the text drifts left and blurs, so the two read as
+ * one object merging rather than a label being hidden. Scrolling back up
+ * reverses it, because the whole thing is driven by scroll position rather than
+ * by a one-way trigger.
+ *
+ * The track is animated in `fr` through a motion template — that avoids
+ * measuring the text, so it stays correct at any font size or after a reflow.
+ */
+function Wordmark({ size = 19, collapse = false }: { size?: number; collapse?: boolean }) {
+  const reduce = useReducedMotion();
+  const { scrollY } = useScroll();
+  const on = collapse && !reduce;
+
+  const RANGE = [0, 120];
+  const fr = useTransform(scrollY, RANGE, [1, 0]);
+  const cols = useMotionTemplate`${fr}fr`;
+  const opacity = useTransform(scrollY, RANGE, [1, 0]);
+  const x = useTransform(scrollY, RANGE, [0, -14]);
+  const b = useTransform(scrollY, RANGE, [0, 3.5]);
+  const filter = useMotionTemplate`blur(${b}px)`;
+  const gap = useTransform(scrollY, RANGE, [10, 0]);
+
   return (
-    <Link href="/" className="flex items-center gap-2.5" aria-label="Orcred — home">
+    <Link href="/" className="flex items-center" aria-label="Orcred — home">
       <svg width="20" height="20" viewBox="0 0 42 42" fill="none" aria-hidden style={{ flexShrink: 0 }}>
         <circle cx="21" cy="21" r="20" fill="#eb4511" />
       </svg>
-      <span
+
+      <motion.span
         style={{
-          fontFamily: "'Inter Tight', sans-serif",
-          fontWeight: 600,
-          fontSize: size,
-          letterSpacing: "-0.035em",
-          color: "var(--ink)",
-          lineHeight: 1,
+          display: "grid",
+          gridTemplateColumns: on ? cols : "1fr",
+          marginLeft: on ? gap : 10,
+          overflow: "hidden",
         }}
       >
-        Orcred
-      </span>
+        <motion.span
+          style={{
+            minWidth: 0,
+            fontFamily: "'Inter Tight', sans-serif",
+            fontWeight: 600,
+            fontSize: size,
+            letterSpacing: "-0.035em",
+            color: "var(--ink)",
+            lineHeight: 1,
+            whiteSpace: "nowrap",
+            opacity: on ? opacity : 1,
+            x: on ? x : 0,
+            filter: on ? filter : "none",
+          }}
+        >
+          Orcred
+        </motion.span>
+      </motion.span>
     </Link>
   );
 }
@@ -117,7 +159,7 @@ export default function Frame({ children }: { children: ReactNode }) {
         }}
       >
         <div className={`${SHELL} h-full flex items-center gap-6`}>
-          <Wordmark />
+          <Wordmark collapse />
 
           <nav className="hidden lg:flex items-center gap-1 ml-auto">
             {NAV.map((l) => (

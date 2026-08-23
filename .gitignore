@@ -9,3 +9,8 @@ env.live.template
 # stray local folders — not part of the project
 /landing/
 /dashboard/
+
+# Finder/iCloud duplicates ("file 2.tsx", "main 2"). These have already broken
+# git fetch once by landing in .git/refs — never let them into a commit.
+* 2.*
+* [0-9].tsx

@@ -434,3 +434,35 @@ body:has(.orx) { background-color: #ffffff; }
     transition-duration: .001ms !important;
   }
 }
+
+/* ── Squircles ────────────────────────────────────────────────────────────
+   `border-radius` draws a circular arc, which meets the straight edge at a
+   visible break. Apple's corners are a superellipse: the curvature eases into
+   the edge so there is no seam.
+
+   Two dials, both turned up here. The radius sets how round the corner starts;
+   the superellipse exponent sets how hard it then flattens back into the
+   straight edge. `squircle` is superellipse(2), which at button scale differs
+   from a plain arc by a pixel or two — invisible. At (5) the corner is round
+   at its apex and runs almost flat into the line, which is the iOS profile.
+
+   This block must stay at the end of the file — it shares specificity with the
+   base component rules above, so whichever comes last wins.
+
+   Progressive enhancement: browsers without `corner-shape` keep the plain
+   rounded corner. Nothing with a pill radius is included — a fully round end
+   has no corner to reshape. */
+@supports (corner-shape: superellipse(5)) {
+  .orx .orx-btn,
+  .orx .orx-input,
+  .orx .orx-card,
+  .orx .orx-nav,
+  .orx .orx-squircle {
+    corner-shape: superellipse(5);
+  }
+
+  .orx .orx-btn   { border-radius: 24px; }
+  .orx .orx-input { border-radius: 20px; }
+  .orx .orx-card  { border-radius: 34px; }
+  .orx .orx-nav   { border-radius: 15px; }
+}
