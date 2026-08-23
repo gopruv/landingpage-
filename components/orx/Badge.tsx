@@ -3,40 +3,58 @@
 /**
  * Badge — the mark Orcred issues.
  *
- * Deliberately not the credential record. A badge answers one question at a
- * glance: verified, on what, how strongly. Everything else — the holder, the
- * four dimensions, the reviewer, the date — belongs on the credential page the
- * badge links to.
+ * Same card family as the credential: issuer strip with the Verified pill, a
+ * labelled body, a footer carrying the reference. A badge and a credential
+ * should read as coming from one issuer, not as two unrelated graphics.
  *
- * The holder's name is intentionally absent. Every issuer that does this well
- * (CFA, AWS, Google) keeps the badge identical for everyone who earned it and
- * puts the name on the verification page: sharing resolves to the page rather
- * than the image, and a person with three verified projects would otherwise
- * get their name repeated three times.
+ * Every dimension is expressed in `cqw` against the card's own container, so
+ * the whole thing scales with whatever width it is actually given — not with
+ * the `width` cap. A fixed scale factor would size the type for the maximum
+ * and cramp it the moment the column got narrower.
+ *
+ * Absent by design: the score, because a public badge showing 64 is a badge
+ * nobody shares — the published pass mark of 60 already means the bar was
+ * cleared. And the holder's name, because sharing resolves to the credential
+ * page, and three projects would otherwise print the name three times.
  */
 
 import { motion, useReducedMotion } from "framer-motion";
-import { EASE, T, Tally } from "./kit";
+import { EASE, T } from "./kit";
+
+/** The width the proportions below were drawn at. */
+const BASE = 260;
 
 export default function Badge({
-  score = 87,
   project = "RAG Pipeline",
-  /** Card width. Height is derived to keep it portrait. */
-  size = 260,
+  stack = "LangChain · Pinecone · FastAPI",
+  id = "ORC-2026-001",
+  width = 380,
   caption = true,
 }: {
-  score?: number;
   project?: string;
-  size?: number;
+  stack?: string;
+  id?: string;
+  width?: number;
   caption?: boolean;
 }) {
   const reduce = useReducedMotion();
+  /** A length from the BASE drawing, expressed against the card's own width. */
+  const q = (px: number) => `${((px / BASE) * 100).toFixed(3)}cqw`;
+  const pad = q(18);
 
   return (
-    <div className="flex flex-col items-center">
+    <div style={{ width: "100%", maxWidth: width }}>
+      <div style={{ containerType: "inline-size" }}>
       <motion.div
-        className="orx-card flex flex-col"
-        style={{ width: size, height: size * 1.42, overflow: "hidden" }}
+        className="orx-card"
+        style={{
+          overflow: "hidden",
+          /* The head rule is the card's own top border, not a child div — a
+             child clips to the padding box and its square ends would overhang
+             the corner radius. A border follows the curve. */
+          borderTop: `${q(4)} solid var(--or)`,
+          borderRadius: q(20),
+        }}
         initial={reduce ? { opacity: 0 } : { opacity: 0, y: 14 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.35 }}
@@ -44,116 +62,99 @@ export default function Badge({
       >
         {/* Issuer */}
         <div
-          className="flex items-center justify-center flex-shrink-0"
-          style={{
-            gap: size * 0.042,
-            height: size * 0.23,
-            borderBottom: "1px solid var(--line)",
-          }}
+          className="flex items-center justify-between gap-2"
+          style={{ height: q(52), paddingLeft: pad, paddingRight: pad, borderBottom: "1px solid var(--line)" }}
         >
-          <svg width={size * 0.082} height={size * 0.082} viewBox="0 0 42 42" fill="none" aria-hidden>
-            <circle cx="21" cy="21" r="20" fill="#eb4511" />
-          </svg>
+          <span className="flex items-center" style={{ gap: q(9) }}>
+            <svg style={{ width: q(15), height: q(15), flexShrink: 0 }} viewBox="0 0 42 42" fill="none" aria-hidden>
+              <circle cx="21" cy="21" r="20" fill="#eb4511" />
+            </svg>
+            <span
+              style={{
+                fontFamily: "'Inter Tight', sans-serif",
+                fontWeight: 600,
+                fontSize: q(15.5),
+                letterSpacing: "-0.035em",
+                color: "var(--ink)",
+              }}
+            >
+              Orcred
+            </span>
+          </span>
+
           <span
+            className="inline-flex items-center flex-shrink-0"
             style={{
-              fontFamily: "'Inter Tight', sans-serif",
-              fontWeight: 600,
-              fontSize: size * 0.095,
-              letterSpacing: "-0.035em",
-              color: "var(--ink)",
-              lineHeight: 1,
+              gap: q(6),
+              padding: `${q(4.5)} ${q(9.5)}`,
+              borderRadius: 999,
+              backgroundColor: "var(--or-soft)",
+              color: "var(--or)",
             }}
           >
-            Orcred
+            <span aria-hidden style={{ width: q(4.5), height: q(4.5), borderRadius: 999, backgroundColor: "var(--or)" }} />
+            <span style={{ fontSize: q(12), fontWeight: 500, letterSpacing: "-0.005em" }}>Verified</span>
           </span>
         </div>
 
-        {/* Score, then what it was earned on */}
-        <div
-          className="flex-1 flex flex-col items-center justify-center text-center"
-          style={{ padding: `${size * 0.06}px ${size * 0.09}px` }}
-        >
-          <span
-            className="inline-flex items-baseline justify-center"
-            style={{
-              gap: 1,
-              padding: `${size * 0.055}px ${size * 0.1}px`,
-              borderRadius: 999,
-              backgroundColor: "var(--or)",
-              color: "#fff",
-              boxShadow: "0 10px 24px -10px rgba(235,69,17,0.6)",
-            }}
+        {/* Mark above the subject */}
+        <div style={{ paddingLeft: pad, paddingRight: pad, paddingTop: q(26), paddingBottom: q(26) }}>
+          <motion.svg
+            viewBox="0 0 100 100" fill="none" aria-hidden
+            initial={reduce ? {} : { scale: 0.86, opacity: 0 }}
+            whileInView={{ scale: 1, opacity: 1 }}
+            viewport={{ once: true, amount: 0.4 }}
+            transition={{ duration: 0.7, delay: 0.2, ease: EASE }}
+            style={{ display: "block", width: q(66), height: q(66), marginBottom: q(24) }}
           >
-            <span
-              className="orx-num"
-              style={{ fontSize: size * 0.165, fontWeight: 600, letterSpacing: "-0.035em" }}
-            >
-              <Tally to={score} dur={1.5} delay={0.3} />
-            </span>
-            <span className="orx-num" style={{ fontSize: size * 0.08, opacity: 0.82 }}>
-              /100
-            </span>
-          </span>
+            <circle cx="50" cy="50" r="50" fill="#eb4511" />
+            <motion.path
+              d="M 29 51 l 14.5 14.5 L 71 34.5"
+              stroke="#fff" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" fill="none"
+              initial={reduce ? {} : { pathLength: 0 }}
+              whileInView={{ pathLength: 1 }}
+              viewport={{ once: true, amount: 0.4 }}
+              transition={{ duration: 0.55, delay: 0.5, ease: EASE }}
+            />
+          </motion.svg>
 
           <span
+            className="orx-label"
+            style={{ display: "block", fontSize: q(11.5), marginBottom: q(9) }}
+          >
+            Project
+          </span>
+          <div
             style={{
               fontFamily: "'Inter Tight', sans-serif",
               fontWeight: 500,
-              fontSize: size * 0.088,
+              fontSize: q(20),
               letterSpacing: "-0.024em",
-              lineHeight: 1.25,
+              lineHeight: 1.2,
               color: "var(--ink)",
-              marginTop: size * 0.155,
+              marginBottom: q(6),
             }}
           >
             {project}
-          </span>
+          </div>
+          <div style={{ ...T.fine, fontSize: q(13), lineHeight: 1.5 }}>{stack}</div>
         </div>
 
-        {/* Assertion */}
+        {/* Reference */}
         <div
-          className="flex items-center justify-center flex-shrink-0"
-          style={{
-            gap: size * 0.03,
-            height: size * 0.19,
-            borderTop: "1px solid var(--line)",
-            backgroundColor: "var(--bg-soft)",
-          }}
+          className="flex items-center"
+          style={{ height: q(46), paddingLeft: pad, paddingRight: pad, borderTop: "1px solid var(--line)" }}
         >
-          <svg
-            width={size * 0.055}
-            height={size * 0.055}
-            viewBox="0 0 14 14"
-            fill="none"
-            aria-hidden
-            style={{ color: "var(--or)" }}
-          >
-            <path
-              d="M2.5 7.4 5.5 10.4 11.5 3.9"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          <span
-            style={{
-              fontSize: size * 0.05,
-              fontWeight: 500,
-              letterSpacing: "0.09em",
-              textTransform: "uppercase",
-              color: "var(--ink-2)",
-            }}
-          >
-            Verified
-          </span>
+          <span className="orx-num" style={{ ...T.fine, fontSize: q(12.5), whiteSpace: "nowrap" }}>{id}</span>
         </div>
       </motion.div>
+      </div>
 
       {caption && (
-        <span style={{ ...T.fine, marginTop: 16, textAlign: "center" }}>
-          Example badge — score is illustrative
-        </span>
+        <div className="flex items-center gap-2.5" style={{ marginTop: 14 }}>
+          <span aria-hidden style={{ width: 5, height: 5, borderRadius: 999, backgroundColor: "var(--ink-4)", flexShrink: 0 }} />
+          <span style={{ ...T.fine }}>Example badge</span>
+        </div>
       )}
     </div>
   );

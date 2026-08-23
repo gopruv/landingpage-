@@ -11,7 +11,7 @@
  */
 
 import { motion, useReducedMotion } from "framer-motion";
-import Credential from "@/components/orx/Credential";
+import Badge from "@/components/orx/Badge";
 import { Arrow, Btn, EASE, Eyebrow, L, Lines, Rise, SHELL, T } from "@/components/orx/kit";
 
 const FACTS = [
@@ -116,7 +116,7 @@ export default function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.25, ease: EASE }}
           >
-            <Credential />
+            <Badge width={400} />
           </motion.div>
         </div>
       </div>

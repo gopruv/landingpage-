@@ -160,12 +160,16 @@ export default function Certificate({
                 lineHeight: 1.6,
                 color: "var(--ink-2)",
                 marginTop: 16 * u,
-                maxWidth: 470 * u,
+                maxWidth: 520 * u,
               }}
             >
               was verified in a live technical review on{" "}
               <span style={{ color: "var(--ink)", fontWeight: 500 }}>{project}</span>
-              {stack && <span style={{ color: "var(--ink-3)" }}> ({stack})</span>}, scoring{" "}
+              {stack && (
+                /* Bind each separator to the word before it so a line never opens
+                   with a stray middot when the stack wraps. */
+                <span style={{ color: "var(--ink-3)" }}> ({stack.replace(/ · /g, "\u00a0\u00b7 ")})</span>
+              )}, scoring{" "}
               <span style={{ color: "var(--or)", fontWeight: 500 }}>{score} out of 100</span>.
             </span>
           </div>
