@@ -1,0 +1,57 @@
+.orc-badge        { width: 340px; max-width: 100%; }   .orc-badge__frame { container-type: inline-size; }
+
+.orc-badge__card {
+  background: #ffffff;
+  border: 1px solid rgba(16,17,20,0.09);
+  border-top: 1.538cqw solid #eb4511;
+  border-radius: 7.692cqw;
+  overflow: hidden;
+  box-shadow: 0 12px 32px -10px rgba(16,17,20,0.10),
+              0 4px 10px -4px rgba(16,17,20,0.04);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.orc-badge__head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 2.308cqw; height: 20cqw; padding: 0 6.923cqw;
+  border-bottom: 1px solid rgba(16,17,20,0.09);
+}
+.orc-badge__mark      { display: inline-flex; align-items: center; gap: 2.077cqw; }
+.orc-badge__mark svg  { width: 6.923cqw; height: 6.923cqw; flex-shrink: 0; display: block; }
+.orc-badge__mark span {
+  font-family: 'Inter Tight', system-ui, sans-serif; font-weight: 600;
+  font-size: 6.923cqw; letter-spacing: -0.018em; color: #0e0f12; line-height: 1;
+}
+.orc-badge__pill {
+  display: inline-flex; align-items: center; gap: 2.308cqw; flex-shrink: 0;
+  padding: 1.731cqw 3.654cqw; border-radius: 999px;
+  background: rgba(235,69,17,0.07); color: #eb4511;
+}
+.orc-badge__pill i {
+  width: 1.731cqw; height: 1.731cqw; border-radius: 999px;
+  background: #eb4511; flex-shrink: 0;
+}
+.orc-badge__pill span { font-size: 4.615cqw; font-weight: 500; letter-spacing: -0.005em; }
+
+.orc-badge__body  { padding: 10cqw 6.923cqw; }
+.orc-badge__check { display: block; width: 25.385cqw; height: 25.385cqw; margin-bottom: 9.231cqw; }
+.orc-badge__label {
+  display: block; font-size: 4.423cqw; font-weight: 500; letter-spacing: 0.05em;
+  text-transform: uppercase; line-height: 1.1; color: #6e737c; margin-bottom: 3.462cqw;
+}
+.orc-badge__project {
+  font-family: 'Inter Tight', system-ui, sans-serif; font-weight: 500;
+  font-size: 7.692cqw; letter-spacing: -0.024em; line-height: 1.2;
+  color: #0e0f12; margin-bottom: 2.308cqw;
+}
+.orc-badge__stack {
+  font-size: 5cqw; line-height: 1.5; color: #6e737c; letter-spacing: -0.005em;
+}
+.orc-badge__foot {
+  display: flex; align-items: center; height: 17.692cqw; padding: 0 6.923cqw;
+  border-top: 1px solid rgba(16,17,20,0.09);
+}
+.orc-badge__foot span {
+  font-size: 4.808cqw; color: #6e737c; white-space: nowrap;
+  font-variant-numeric: tabular-nums; letter-spacing: -0.005em;
+}

@@ -1,0 +1,12 @@
+@page { size: A4 landscape; margin: 0; }
+
+html, body {
+  margin: 0; padding: 0; background: #fff;
+  width: 1122px; height: 793px;     overflow: hidden;
+}
+
+* { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+.orc-cert { border: none !important; box-shadow: none !important; }
+
+[aria-label="Cookie consent"] { display: none !important; }

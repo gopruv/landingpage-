@@ -1,0 +1,58 @@
+<div class="orc-cert" style="--cert-w: 1122px">
+
+  <div class="orc-cert__rule"></div>
+
+  <div class="orc-cert__inner">
+
+        <div class="orc-cert__top">
+      <span class="orc-cert__mark">
+        <svg viewBox="0 0 40 40" fill="none" aria-hidden="true">
+          <circle cx="20" cy="20" r="20" fill="#eb4511"></circle>
+        </svg>
+        <span>Orcred</span>
+      </span>
+      <span class="orc-cert__id">{{CREDENTIAL_ID}}</span>
+    </div>
+
+        <div class="orc-cert__body">
+      <span class="orc-cert__kicker">Certificate of Verification</span>
+      <span class="orc-cert__intro">This certifies that</span>
+      <span class="orc-cert__name">{{HOLDER_NAME}}</span>
+      <span class="orc-cert__sentence">
+        was verified in a live technical review on
+        <b>{{PROJECT_TITLE}}</b>
+        <i>({{TECH_STACK}})</i>, scoring
+        <em>{{SCORE}} out of 100</em>.
+      </span>
+    </div>
+
+        <div class="orc-cert__foot">
+
+      <div class="orc-cert__sig">
+        <svg class="orc-cert__flourish" viewBox="0 0 120 36" fill="none" aria-hidden="true">
+          <path d="M4 26c8-14 13-19 17-18 4 1 1 12-2 17-3 5-6 6-7 4-2-3 3-10 10-14 6-4 12-6 15-3 3 3-2 9-5 12-2 3-2 5 1 5 5 0 12-6 18-13 5-6 9-11 12-10 3 1 0 8-3 13-2 4-3 7-1 8 3 1 9-3 15-9"
+                stroke="#0e0f12" stroke-width="1.6" stroke-linecap="round"
+                stroke-linejoin="round" opacity="0.9"></path>
+        </svg>
+        <div class="orc-cert__line">
+          <div class="orc-cert__strong">{{SIGNATORY_NAME}}</div>
+          <div class="orc-cert__sub">{{SIGNATORY_ROLE}}</div>
+        </div>
+      </div>
+
+      <div class="orc-cert__date">
+        <div class="orc-cert__spacer"></div>
+        <div class="orc-cert__line">
+          <div class="orc-cert__strong">{{ISSUE_DATE}}</div>
+          <div class="orc-cert__sub">Date of issue</div>
+        </div>
+      </div>
+
+      <div class="orc-cert__qr">
+        {{QR_CODE_SVG}}
+        <span class="orc-cert__qrcap">Scan to verify</span>
+      </div>
+
+    </div>
+  </div>
+</div>
