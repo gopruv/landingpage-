@@ -14,3 +14,13 @@ env.live.template
 # git fetch once by landing in .git/refs — never let them into a commit.
 * 2.*
 * [0-9].tsx
+
+# macOS Finder metadata — regenerates on every folder visit
+.DS_Store
+**/.DS_Store
+
+# TypeScript incremental build cache — rewritten on every build
+tsconfig.tsbuildinfo
+
+# Claude Code worktrees and local session state
+.claude/worktrees/
