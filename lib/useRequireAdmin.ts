@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { getSafeSession } from './authSession';
 import { supabase } from './supabase';
 import { api, ApiError } from './api';
 import { allowsDashboardRole } from './devAccess';
@@ -12,30 +13,44 @@ export function useRequireAdmin() {
   const [denied, setDenied] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session) {
-        router.replace('/dashboard/auth');
-        return;
-      }
+    let cancelled = false;
 
+    async function check() {
       try {
-        const profile = await api.auth.me() as { account_type?: string; email?: string };
-        if (!allowsDashboardRole(profile.email, 'admin', profile.account_type)) {
-          const role = profile.account_type ?? 'unknown';
-          const email = profile.email ?? session.user.email ?? 'your account';
-          setDenied(
-            `Signed in as ${email} (${role}). Set account_type to "admin" in Supabase → public.users, then sign out and back in.`,
-          );
+        const session = await getSafeSession({ refresh: true });
+        if (cancelled) return;
+
+        if (!session) {
+          router.replace('/dashboard/auth');
           return;
         }
-        setReady(true);
-      } catch (e) {
-        const msg = e instanceof ApiError ? e.message : 'Could not load profile';
-        setDenied(
-          `${msg} (${session.user.email}). Ensure public.users has id = ${session.user.id} with account_type = admin.`,
-        );
+
+        try {
+          const profile = await api.auth.me() as { account_type?: string; email?: string };
+          if (!allowsDashboardRole(profile.email, 'admin', profile.account_type)) {
+            const role = profile.account_type ?? 'unknown';
+            const email = profile.email ?? session.user.email ?? 'your account';
+            setDenied(
+              `Signed in as ${email} (${role}). Set account_type to "admin" in Supabase → public.users, then sign out and back in.`,
+            );
+            return;
+          }
+          setReady(true);
+        } catch (e) {
+          const msg = e instanceof ApiError ? e.message : 'Could not load profile';
+          setDenied(
+            `${msg} (${session.user.email}). Ensure public.users has id = ${session.user.id} with account_type = admin.`,
+          );
+        }
+      } catch {
+        if (!cancelled) router.replace('/dashboard/auth');
       }
-    });
+    }
+
+    void check();
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   const signOut = async () => {

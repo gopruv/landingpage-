@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api, ApiError } from '@/lib/api';
 
@@ -317,15 +318,25 @@ export default function ScheduledMeetingsCalendar({
                         Student: {s.student_name} · Reviewer: {s.reviewer_name}
                       </p>
                     )}
-                    {onOpenApplication && !s.is_ghost && (
-                      <button
-                        type="button"
-                        onClick={() => onOpenApplication(s.application_id)}
-                        style={{ padding: '5px 10px', fontSize: 11, fontWeight: 600, background: '#fff', border: BORDER, cursor: 'pointer' }}
-                      >
-                        Open application →
-                      </button>
-                    )}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                      {!s.is_ghost && (s.calendar_status === 'today' || s.calendar_status === 'upcoming') && (
+                        <Link
+                          href={`/dashboard/session/${s.assignment_id}?as=admin`}
+                          style={{ padding: '5px 10px', fontSize: 11, fontWeight: 600, background: '#1a1a2e', color: '#fff', textDecoration: 'none' }}
+                        >
+                          Observe live →
+                        </Link>
+                      )}
+                      {onOpenApplication && !s.is_ghost && (
+                        <button
+                          type="button"
+                          onClick={() => onOpenApplication(s.application_id)}
+                          style={{ padding: '5px 10px', fontSize: 11, fontWeight: 600, background: '#fff', border: BORDER, cursor: 'pointer' }}
+                        >
+                          Open application →
+                        </button>
+                      )}
+                    </div>
                   </div>
                 );
               })}

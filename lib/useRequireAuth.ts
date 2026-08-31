@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { getSafeSession } from './authSession';
 import { supabase } from './supabase';
 
 export function useRequireAuth() {
@@ -9,13 +10,26 @@ export function useRequireAuth() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        router.replace('/dashboard/auth');
-      } else {
-        setReady(true);
+    let cancelled = false;
+
+    async function check() {
+      try {
+        const session = await getSafeSession({ refresh: true });
+        if (cancelled) return;
+        if (!session) {
+          router.replace('/dashboard/auth');
+        } else {
+          setReady(true);
+        }
+      } catch {
+        if (!cancelled) router.replace('/dashboard/auth');
       }
-    });
+    }
+
+    void check();
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   const signOut = async () => {

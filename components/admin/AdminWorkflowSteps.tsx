@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import AdminSessionAudit from '@/components/admin/AdminSessionAudit';
 import {
@@ -413,6 +414,23 @@ export default function AdminWorkflowSteps({
             <p style={{ fontSize: 13, margin: '0 0 12px' }}>
               {new Date(assignment.session_date).toLocaleString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
             </p>
+            {!isSessionDone(assignment) && (
+              <Link
+                href={`/dashboard/session/${assignment.id}?as=admin`}
+                style={{
+                  display: 'inline-block',
+                  marginBottom: 12,
+                  padding: '8px 14px',
+                  background: '#1a1a2e',
+                  color: '#fff',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                }}
+              >
+                Observe live session →
+              </Link>
+            )}
             {canAdminReschedule && (
               <AdminReschedulePanel
                 assignment={assignment}

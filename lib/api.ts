@@ -86,6 +86,16 @@ export const api = {
     logout: () => request('/auth/logout', { method: 'POST' }),
   },
 
+  account: {
+    settings: () => request('/account/settings'),
+    updateSettings: (data: { full_name: string }) =>
+      request('/account/settings', { method: 'PUT', body: JSON.stringify(data) }),
+    sendRecoveryLink: () =>
+      request('/account/recovery-link', { method: 'POST', body: JSON.stringify({}) }),
+    requestEmailChange: (data: { new_email: string }) =>
+      request('/account/email-change', { method: 'POST', body: JSON.stringify(data) }),
+  },
+
   // Student endpoints
   student: {
     dashboard: () => request('/student/dashboard'),
@@ -128,7 +138,7 @@ export const api = {
   },
 
   video: {
-    session: (assignmentId: string, asRole?: 'reviewer' | 'student') => {
+    session: (assignmentId: string, asRole?: 'reviewer' | 'student' | 'admin') => {
       const q = asRole ? `?as=${asRole}` : '';
       return request(`/video/session/${assignmentId}${q}`);
     },
@@ -139,6 +149,13 @@ export const api = {
       request(`/session/notes?as=${asRole}`, { method: 'POST', body: JSON.stringify(data) }),
     recordJoin: (assignment_id: string, asRole: 'reviewer' | 'student') =>
       request(`/session/join?as=${asRole}`, { method: 'POST', body: JSON.stringify({ assignment_id }) }),
+    agentSuggest: (data: {
+      assignment_id: string;
+      mode?: 'questions' | 'feedback_draft';
+      focus?: string;
+      session_notes?: string;
+    }) =>
+      request('/session/agent/suggest?as=reviewer', { method: 'POST', body: JSON.stringify(data) }),
   },
 
   // Generator endpoints

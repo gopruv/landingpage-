@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { api, ApiError } from '@/lib/api';
+import { getSafeSession } from '@/lib/authSession';
 import { useRequireAuth } from '@/lib/useRequireAuth';
 import { isDevFullAccess } from '@/lib/devAccess';
 import { supabase } from '@/lib/supabase';
@@ -12,6 +13,7 @@ import SessionScoreForm, { DEFAULT_RATINGS } from '@/components/session/SessionS
 import SessionSubmissionSidebar from '@/components/session/SessionSubmissionSidebar';
 import SessionTimer from '@/components/session/SessionTimer';
 import SessionNotesPanel from '@/components/session/SessionNotesPanel';
+import SessionAgentPanel from '@/components/session/SessionAgentPanel';
 import type { CriterionKey, CriterionRating } from '@/lib/scoring';
 import { EARLY_END_BUFFER_MINUTES, SESSION_DURATION_MINUTES } from '@/lib/sessionAccess';
 
@@ -42,8 +44,9 @@ interface SessionData {
   project_name: string | null;
   session_date: string | null;
   daily_room_url: string | null;
-  role: 'student' | 'reviewer';
+  role: 'student' | 'reviewer' | 'admin';
   is_host: boolean;
+  is_observer?: boolean;
   can_join: boolean;
   join_window_open: boolean;
   session_scheduled: boolean;
@@ -195,7 +198,8 @@ export default function SessionPage() {
   const searchParams = useSearchParams();
   const assignmentId = params.assignmentId as string;
   const asParam = searchParams.get('as')?.toLowerCase() ?? null;
-  const asRole = asParam === 'student' || asParam === 'reviewer' ? asParam : undefined;
+  const asRole = asParam === 'student' || asParam === 'reviewer' || asParam === 'admin' ? asParam : undefined;
+  const [isAdminUser, setIsAdminUser] = useState(false);
 
   const { ready } = useRequireAuth();
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -205,7 +209,7 @@ export default function SessionPage() {
   const [error, setError] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [actionMsg, setActionMsg] = useState('');
-  const [sidebarTab, setSidebarTab] = useState<'submission' | 'notes' | 'score'>('submission');
+  const [sidebarTab, setSidebarTab] = useState<'submission' | 'notes' | 'agent' | 'score'>('submission');
 
   const [ratings, setRatings] = useState(DEFAULT_RATINGS());
   const [feedbackNotes, setFeedbackNotes] = useState('');
@@ -229,7 +233,7 @@ export default function SessionPage() {
   const [showEarlyEndModal, setShowEarlyEndModal] = useState(false);
   const [pendingEarlyEndReason, setPendingEarlyEndReason] = useState('');
 
-  const applyPayload = useCallback((payload: SessionData, forRole: 'reviewer' | 'student') => {
+  const applyPayload = useCallback((payload: SessionData, forRole: 'reviewer' | 'student' | 'admin') => {
     let merged = payload;
 
     if (payload.meeting_closed || payload.session_done || !payload.can_join) {
@@ -290,9 +294,13 @@ export default function SessionPage() {
 
   useEffect(() => {
     if (!ready) return;
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUserEmail(user?.email ?? null);
-    });
+    getSafeSession().then((session) => {
+      setUserEmail(session?.user?.email ?? null);
+    }).catch(() => {});
+    api.auth.me().then((me) => {
+      const role = (me as { account_type?: string })?.account_type;
+      if (role === 'admin') setIsAdminUser(true);
+    }).catch(() => {});
   }, [ready]);
 
   useEffect(() => {
@@ -322,7 +330,7 @@ export default function SessionPage() {
   }, [data?.can_join, data?.session_done, loadSession]);
 
   const recordJoin = useCallback(() => {
-    if (!assignmentId || !asRole || joinReported.current) return;
+    if (!assignmentId || !asRole || asRole === 'admin' || joinReported.current) return;
     joinReported.current = true;
     api.session.recordJoin(assignmentId, asRole).then(() => loadSession()).catch(() => {
       joinReported.current = false;
@@ -506,6 +514,15 @@ export default function SessionPage() {
             >
               Join as student
             </button>
+            {isAdminUser && (
+              <button
+                type="button"
+                onClick={() => router.push(`/dashboard/session/${assignmentId}?as=admin`)}
+                style={{ padding: '12px 20px', background: '#1a1a2e', color: '#fff', border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+              >
+                Observe as admin
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -523,7 +540,8 @@ export default function SessionPage() {
     );
   }
 
-  const dashboardUrl = asRole === 'reviewer' ? '/dashboard/reviewer' : '/dashboard/student';
+  const dashboardUrl =
+    asRole === 'admin' ? '/dashboard/admin' : asRole === 'reviewer' ? '/dashboard/reviewer' : '/dashboard/student';
   const sessionLabel = data.session_date
     ? new Date(data.session_date).toLocaleString('en-IN', {
         weekday: 'long',
@@ -540,7 +558,9 @@ export default function SessionPage() {
     waiting.tone === 'error' ? '#ba1a1a' : waiting.tone === 'warn' ? '#9a6500' : 'rgba(15,13,12,0.55)';
 
   const showVideo = data.can_join && !!data.daily_room_url && !!data.token && data.role === asRole;
+  const isAdmin = asRole === 'admin';
   const isReviewer = asRole === 'reviewer';
+  const isStudent = asRole === 'student';
   const showTimer = !!data.session_date && (data.join_window_open || data.meeting_closed);
   const showNotesSection =
     !!data.session_notes?.trim()
@@ -563,7 +583,12 @@ export default function SessionPage() {
 
   return (
     <div className="min-h-screen" style={{ background: '#faf7f2' }}>
-      {isDevFullAccess(userEmail) && (
+      {isAdmin && (
+        <div style={{ background: '#1a1a2e', color: '#fff', padding: '10px 24px', fontSize: 12, textAlign: 'center' }}>
+          Admin observer mode — you join muted with camera off. Reviewer and student are not notified.
+        </div>
+      )}
+      {isDevFullAccess(userEmail) && !isAdmin && (
         <div style={{ background: '#1a1a2e', color: '#fff', padding: '8px 24px', fontSize: 12, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
           <span>Dev testing as: <strong>{asRole === 'reviewer' ? 'Reviewer (host)' : 'Student'}</strong></span>
           <span style={{ opacity: 0.5 }}>|</span>
@@ -670,7 +695,57 @@ export default function SessionPage() {
           </div>
         )}
 
-        {isReviewer ? (
+        {isAdmin ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(300px, 380px)', gap: 20, alignItems: 'start' }}>
+            <div>
+              {showVideo ? (
+                <>
+                  <p style={{ fontSize: 13, color: 'rgba(15,13,12,0.55)', marginBottom: 12 }}>
+                    Listening in as admin — microphone and camera start off. Unmute only if needed.
+                  </p>
+                  <DailyRoomEmbed
+                    key={`${data.assignment_id}-admin-live`}
+                    roomUrl={data.daily_room_url!}
+                    token={data.token!}
+                    userName="Orcred Admin"
+                  />
+                </>
+              ) : data.meeting_closed ? (
+                <div style={{ padding: 24, background: '#fff', border: '1px solid rgba(15,13,12,0.1)' }}>
+                  <p style={{ fontSize: 15, fontWeight: 600, margin: '0 0 8px' }}>Meeting closed</p>
+                  <p style={{ fontSize: 14, color: 'rgba(15,13,12,0.6)', margin: 0, lineHeight: 1.6 }}>
+                    This session has ended. Review the submission in the panel →
+                  </p>
+                  {data.recording_url && (
+                    <a href={data.recording_url} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: '#eb4511', marginTop: 12, display: 'inline-block' }}>
+                      View recording →
+                    </a>
+                  )}
+                </div>
+              ) : (
+                <div style={{ padding: 32, background: '#fff', border: '1px solid rgba(15,13,12,0.1)' }}>
+                  <p style={{ fontSize: 15, fontWeight: 600, margin: '0 0 8px' }}>{waiting.title}</p>
+                  <p style={{ fontSize: 14, color: waitingColor, lineHeight: 1.6, margin: 0 }}>{waiting.body}</p>
+                </div>
+              )}
+            </div>
+            <aside style={{ background: '#fff', border: '1px solid rgba(15,13,12,0.1)', padding: 16 }}>
+              <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#eb4511', margin: '0 0 12px' }}>
+                Submission
+              </p>
+              {data.application ? (
+                <SessionSubmissionSidebar application={data.application} />
+              ) : (
+                <p style={{ fontSize: 13, color: 'rgba(15,13,12,0.45)' }}>No submission data.</p>
+              )}
+              {data.recording_url && (
+                <a href={data.recording_url} target="_blank" rel="noreferrer" style={{ display: 'block', marginTop: 16, fontSize: 13, color: '#eb4511' }}>
+                  View session recording →
+                </a>
+              )}
+            </aside>
+          </div>
+        ) : isReviewer ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(300px, 400px)', gap: 20, alignItems: 'start' }}>
             <div>
               {asRole === 'reviewer' && data.is_host && showVideo && (
@@ -737,33 +812,76 @@ export default function SessionPage() {
               )}
             </div>
 
-            <aside style={{ background: '#fff', border: '1px solid rgba(15,13,12,0.1)', maxHeight: 'calc(100vh - 140px)', overflowY: 'auto' }}>
-              <div style={{ display: 'flex', borderBottom: '1px solid rgba(15,13,12,0.1)' }}>
-                {(['submission', 'notes', 'score'] as const).map((tab) => (
+            <aside
+              style={{
+                background: '#fff',
+                border: '1px solid rgba(15,13,12,0.1)',
+                maxHeight: 'calc(100vh - 140px)',
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
+              }}
+            >
+              <div style={{ display: 'flex', borderBottom: '1px solid rgba(15,13,12,0.1)', flexShrink: 0 }}>
+                {(
+                  [
+                    { id: 'submission' as const, label: 'Brief', icon: '⧉' },
+                    { id: 'notes' as const, label: 'Notes', icon: '✎' },
+                    { id: 'agent' as const, label: 'Copilot', icon: '✦' },
+                    { id: 'score' as const, label: 'Scores', icon: '◆' },
+                  ] as const
+                ).map((tab) => (
                   <button
-                    key={tab}
+                    key={tab.id}
                     type="button"
-                    onClick={() => setSidebarTab(tab)}
+                    title={tab.label}
+                    onClick={() => setSidebarTab(tab.id)}
                     style={{
                       flex: 1,
-                      padding: '12px 6px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 3,
+                      padding: '10px 4px 9px',
                       border: 'none',
-                      background: sidebarTab === tab ? '#faf7f2' : '#fff',
-                      fontSize: 11,
+                      background: sidebarTab === tab.id ? '#faf7f2' : '#fff',
+                      fontSize: 10,
                       fontWeight: 600,
                       cursor: 'pointer',
-                      borderBottom: sidebarTab === tab ? '2px solid #eb4511' : '2px solid transparent',
+                      borderBottom: sidebarTab === tab.id ? '2px solid #eb4511' : '2px solid transparent',
+                      color: sidebarTab === tab.id ? '#0f0d0c' : 'rgba(15,13,12,0.45)',
                     }}
                   >
-                    {tab === 'submission' ? 'Submission' : tab === 'notes' ? 'Notes' : 'Scores'}
+                    <span style={{ fontSize: 15, lineHeight: 1 }} aria-hidden>
+                      {tab.icon}
+                    </span>
+                    <span>{tab.label}</span>
                   </button>
                 ))}
               </div>
-              <div style={{ padding: 16 }}>
+              <div
+                style={{
+                  flex: 1,
+                  minHeight: 0,
+                  overflowY: sidebarTab === 'agent' ? 'hidden' : 'auto',
+                  padding: sidebarTab === 'agent' ? 0 : 16,
+                }}
+              >
                 {sidebarTab === 'submission' && data.application ? (
                   <SessionSubmissionSidebar application={data.application} />
                 ) : sidebarTab === 'notes' ? (
                   notesPanel
+                ) : sidebarTab === 'agent' ? (
+                  <SessionAgentPanel
+                    assignmentId={data.assignment_id}
+                    sessionNotes={sessionNotes}
+                    disabled={data.score_submitted}
+                    onApplyFeedbackDraft={(draft) => {
+                      setFeedbackNotes(draft);
+                      setSidebarTab('score');
+                    }}
+                  />
                 ) : (
                   <>
                     {data.score_submitted ? (
@@ -873,6 +991,16 @@ export default function SessionPage() {
                   <p style={{ fontSize: 14, color: 'rgba(15,13,12,0.6)', margin: 0, lineHeight: 1.6 }}>
                     The video room is no longer available. Review your notes and responses in the panel →
                   </p>
+                  {data.recording_url && (
+                    <a
+                      href={data.recording_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ fontSize: 13, color: '#eb4511', marginTop: 12, display: 'inline-block' }}
+                    >
+                      View session recording →
+                    </a>
+                  )}
                 </div>
               )}
 

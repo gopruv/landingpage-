@@ -1,7 +1,9 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type Session } from '@supabase/supabase-js';
 
 /** Stay under the ~4KB browser cookie limit (chunked for proxy.ts). */
 const COOKIE_CHUNK_SIZE = 3180;
+/** Supabase treats sessions within this margin as expired (matches auth-js). */
+const EXPIRY_MARGIN_MS = 90_000;
 
 /** Shared parent domain in production so orcred.com and dashboard.orcred.com share auth cookies. */
 function cookieDomain(): string | undefined {
@@ -75,9 +77,75 @@ function readChunkedCookie(key: string): string | null {
   return chunks.sort((a, b) => a.idx - b.idx).map((c) => c.value).join('');
 }
 
+function parseStoredSession(raw: string | null): Session | null {
+  if (!raw) return null;
+  for (const value of [raw, decodeURIComponent(raw)]) {
+    try {
+      const parsed = JSON.parse(value) as Session;
+      if (parsed?.access_token) return parsed;
+    } catch {
+      /* try next encoding */
+    }
+  }
+  return null;
+}
+
+function findAuthStorageKey(): string | null {
+  if (typeof document === 'undefined') return null;
+  for (const row of document.cookie.split('; ')) {
+    const name = row.split('=')[0]?.trim();
+    if (name?.includes('-auth-token') && !name.includes('.')) return name;
+  }
+  return null;
+}
+
+export function isStoredSessionExpired(session: Session, marginMs = EXPIRY_MARGIN_MS): boolean {
+  if (!session.expires_at) return true;
+  return session.expires_at * 1000 - Date.now() < marginMs;
+}
+
+/** Read auth session from cookies without triggering Supabase network refresh. */
+export function readLocalAuthSession(): Session | null {
+  if (typeof document === 'undefined') return null;
+  const key = findAuthStorageKey();
+  if (!key) return null;
+  return parseStoredSession(readChunkedCookie(key));
+}
+
+/** Wipe all Supabase auth cookies (local only — no server round-trip). */
+export function clearLocalAuthSession(): void {
+  if (typeof document === 'undefined') return;
+  const names = document.cookie
+    .split('; ')
+    .map((row) => row.split('=')[0]?.trim())
+    .filter((name): name is string => !!name && name.includes('-auth-token'));
+
+  for (const name of names) {
+    clearMatchingCookies(name);
+  }
+}
+
+/** Drop very stale auth cookies synchronously (safe before client init). */
+export function clearExpiredAuthSessionSync(maxExpiredMs = EXPIRY_MARGIN_MS): void {
+  if (typeof document === 'undefined') return;
+  const session = readLocalAuthSession();
+  if (!session?.expires_at) return;
+  const expiredForMs = Date.now() - session.expires_at * 1000;
+  if (expiredForMs > maxExpiredMs) {
+    clearLocalAuthSession();
+  }
+}
+
 // Cookie storage shared across orcred.com subdomains in production.
 const cookieStorage = {
-  getItem: (key: string): string | null => readChunkedCookie(key),
+  getItem: (key: string): string | null => {
+    const raw = readChunkedCookie(key);
+    if (!raw || !key.includes('-auth-token')) return raw;
+    const session = parseStoredSession(raw);
+    // Prevent Supabase from auto-refreshing on init when the access token is expired.
+    if (session && isStoredSessionExpired(session)) return null;
+    return raw;
+  },
   setItem: (key: string, value: string): void => {
     if (typeof document === 'undefined') return;
     clearMatchingCookies(key);
@@ -102,6 +170,10 @@ const cookieStorage = {
   },
 };
 
+if (typeof window !== 'undefined') {
+  clearExpiredAuthSessionSync();
+}
+
 export const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -115,16 +187,3 @@ export const supabase = createClient(
     },
   },
 );
-
-/** Wipe all Supabase auth cookies (local only — no server round-trip). */
-export function clearLocalAuthSession(): void {
-  if (typeof document === 'undefined') return;
-  const names = document.cookie
-    .split('; ')
-    .map((row) => row.split('=')[0]?.trim())
-    .filter((name): name is string => !!name && name.includes('-auth-token'));
-
-  for (const name of names) {
-    clearMatchingCookies(name);
-  }
-}

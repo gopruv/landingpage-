@@ -11,6 +11,7 @@ import AdminWorkflowSteps from '@/components/admin/AdminWorkflowSteps';
 import AdminSubmissionDetail from '@/components/admin/AdminSubmissionDetail';
 import ScheduledMeetingsCalendar from '@/components/admin/ScheduledMeetingsCalendar';
 import WaitlistPanel from '@/components/admin/WaitlistPanel';
+import AccountSettingsPanel from '@/components/settings/AccountSettingsPanel';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -548,12 +549,8 @@ export default function AdminDashboard() {
         {/* ── Waitlist ── */}
         {view === 'waitlist' && <WaitlistPanel />}
 
-        {/* ── Settings placeholder ── */}
-        {view === 'settings' && (
-          <div style={{ padding: '60px', textAlign: 'center', fontSize: '14px', color: 'rgba(15,13,12,0.35)', backgroundColor: '#fff', border: BORDER }}>
-            Settings coming soon.
-          </div>
-        )}
+        {/* ── Settings ── */}
+        {view === 'settings' && <AccountSettingsPanel embedded />}
 
         {/* ── Reviewers full view ── */}
         {view === 'reviewers' && (

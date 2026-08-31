@@ -35,6 +35,8 @@ interface DashData {
     proposed_session_notes?: string | null;
     proposed_session_at?: string | null;
     assignment_status?: string;
+    session_completed_at?: string | null;
+    recording_url?: string | null;
     score?: {
       total:           number;
       technical_depth: number;
@@ -128,6 +130,8 @@ export default function StudentDashboard() {
         proposed_session_notes: assignment?.proposed_session_notes,
         proposed_session_at: assignment?.proposed_session_at,
         assignment_status: assignment?.status,
+        session_completed_at: assignment?.session_completed_at,
+        recording_url: raw.application.recording_url ?? null,
         score: mapScore(scoreSource),
       } : undefined,
       credential: raw?.credential ? {
@@ -214,6 +218,7 @@ export default function StudentDashboard() {
           <nav style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <NavLink href="/dashboard/student" active>Dashboard</NavLink>
             <NavLink href="/dashboard/student/profile">Profile</NavLink>
+            <NavLink href="/dashboard/settings">Settings</NavLink>
           </nav>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{ width: '30px', height: '30px', borderRadius: '50%', backgroundColor: '#eb4511', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -490,6 +495,20 @@ export default function StudentDashboard() {
                       reschedulePending={isReschedulePending(data.application.proposed_session_notes)}
                       onSuccess={loadDashboard}
                     />
+
+                    {data.application.session_completed_at && data.application.recording_url && (
+                      <div style={{ marginTop: 20, padding: '14px 16px', background: '#fff', border: BORDER }}>
+                        <p style={{ fontSize: 12, fontWeight: 600, margin: '0 0 8px' }}>Session recording</p>
+                        <a
+                          href={data.application.recording_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{ fontSize: 13, color: '#eb4511' }}
+                        >
+                          View your session recording →
+                        </a>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -555,6 +574,19 @@ export default function StudentDashboard() {
 
                     {/* Score breakdown bars */}
                     <div style={{ borderTop: '1px solid rgba(15,13,12,0.07)', paddingTop: '24px' }}>
+                      {data.application.recording_url && (
+                        <div style={{ marginBottom: 24, padding: '14px 16px', background: 'rgba(15,13,12,0.03)', border: BORDER }}>
+                          <p style={{ fontSize: 12, fontWeight: 600, margin: '0 0 8px' }}>Session recording</p>
+                          <a
+                            href={data.application.recording_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{ fontSize: 13, color: '#eb4511' }}
+                          >
+                            View your session recording →
+                          </a>
+                        </div>
+                      )}
                       <p style={{ fontSize: '11px', fontWeight: 600, color: 'rgba(15,13,12,0.38)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '20px' }}>Score breakdown</p>
                       {[
                         { label: 'Technical Depth',  score: data.application.score.technical_depth,  weight: 35 },
