@@ -139,9 +139,14 @@ export function Field({
       >
         <span style={{ fontSize: 15, fontWeight: 500, color: "var(--ink)", letterSpacing: "-0.01em" }}>
           {label}
+          {required && (
+            <span style={{ color: "var(--or)", marginLeft: 3, fontWeight: 600 }} aria-hidden="true">
+              *
+            </span>
+          )}
         </span>
         {required && (
-          <span style={{ fontSize: 13, color: "var(--or)", fontWeight: 500 }} aria-hidden>
+          <span style={{ fontSize: 13, color: "var(--or)", fontWeight: 500 }} aria-hidden="true">
             required
           </span>
         )}

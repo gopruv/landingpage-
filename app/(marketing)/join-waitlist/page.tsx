@@ -11,6 +11,12 @@ import { api, ApiError } from "@/lib/api";
 const MAX_DOMAINS = 3;
 const MIN_MOTIVATION = 20;
 
+function isValidPhone(raw: string): boolean {
+  const digits = raw.replace(/\D/g, "");
+  if (digits.length === 10 && /^[6-9]/.test(digits)) return true;
+  return raw.trim().startsWith("+") && digits.length >= 11 && digits.length <= 15;
+}
+
 const PREP = [
   { label: "Prepare a GitHub repo", sub: "A real AI/ML project you built — not a tutorial clone." },
   { label: "Record a Loom walkthrough", sub: "3–5 minutes on what you built, a key decision, and what broke." },
@@ -20,6 +26,7 @@ const PREP = [
 export default function JoinWaitlistPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [domains, setDomains] = useState<string[]>([]);
   const [custom, setCustom] = useState("");
   const [degree, setDegree] = useState("");
@@ -48,6 +55,7 @@ export default function JoinWaitlistPage() {
   const ok =
     fullName.trim() !== "" &&
     email.trim() !== "" &&
+    isValidPhone(phone) &&
     domains.length > 0 &&
     degree !== "" &&
     referral !== "" &&
@@ -63,6 +71,7 @@ export default function JoinWaitlistPage() {
       await api.waitlist.submit({
         full_name: fullName.trim(),
         email: email.trim(),
+        phone: phone.trim(),
         domains: resolved,
         degree,
         referral_source: referral,
@@ -118,6 +127,11 @@ export default function JoinWaitlistPage() {
                   <Field id="email" label="Email" required>
                     <input id="email" type="email" className="orx-input" autoComplete="email" required
                       value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@university.edu" />
+                  </Field>
+
+                  <Field id="phone" label="Phone" required hint="WhatsApp or SMS — we may reach out about launch">
+                    <input id="phone" type="tel" className="orx-input" autoComplete="tel" inputMode="tel" required
+                      value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="9876543210 or +91 98765 43210" />
                   </Field>
 
                   <Field

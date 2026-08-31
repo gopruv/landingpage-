@@ -8,6 +8,7 @@ const BORDER = '1px solid rgba(15,13,12,0.1)';
 export interface WaitlistEntry {
   id: string;
   email: string;
+  phone?: string | null;
   full_name: string;
   domain: string;
   degree: string;
@@ -184,7 +185,7 @@ export default function WaitlistPanel() {
   if (migrationRequired) {
     return (
       <div style={{ padding: 40, background: '#fff', border: BORDER, fontSize: 14, color: '#9a6500' }}>
-        Run migrations <code>009_waitlist.sql</code> and <code>014_waitlist_email_tracking.sql</code>, then refresh.
+        Run migrations through <code>016_waitlist_phone.sql</code> (or <code>apply-waitlist-idempotent.sql</code>), then refresh.
       </div>
     );
   }
@@ -289,6 +290,9 @@ export default function WaitlistPanel() {
                     <td style={{ padding: '12px 16px' }}>
                       <div style={{ fontWeight: 600 }}>{row.full_name}</div>
                       <div style={{ fontSize: 11, color: 'rgba(15,13,12,0.45)' }}>{row.email}</div>
+                      {row.phone && (
+                        <div style={{ fontSize: 11, color: 'rgba(15,13,12,0.38)' }}>{row.phone}</div>
+                      )}
                     </td>
                     <td style={{ padding: '12px 16px' }}>{row.domain}</td>
                     <td style={{ padding: '12px 16px' }}>{row.degree}</td>
@@ -334,6 +338,9 @@ export default function WaitlistPanel() {
               <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#eb4511', margin: 0 }}>Waitlist</p>
               <h3 style={{ fontSize: 16, fontWeight: 600, margin: '4px 0 0' }}>{selected.full_name}</h3>
               <p style={{ fontSize: 12, color: 'rgba(15,13,12,0.5)', margin: '4px 0 0' }}>{selected.email}</p>
+              {selected.phone && (
+                <p style={{ fontSize: 12, color: 'rgba(15,13,12,0.5)', margin: '4px 0 0' }}>{selected.phone}</p>
+              )}
             </div>
             <button type="button" onClick={() => setSelected(null)} style={{ border: 'none', background: 'transparent', fontSize: 20, cursor: 'pointer', color: 'rgba(15,13,12,0.35)' }}>×</button>
           </div>
